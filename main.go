@@ -10,10 +10,11 @@ import (
 	"github/actor"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
 type Game struct {
-	count        int
+	count        int32
 	scourgeActor actor.Actor
 	purgerActor  actor.Actor
 	keys         []ebiten.Key
@@ -25,8 +26,8 @@ var (
 )
 
 const (
-	screenWidth  = 320
-	screenHeight = 240
+	screenWidth  = 600
+	screenHeight = 400
 
 	frameOX     = 0
 	frameOY     = 32
@@ -40,20 +41,27 @@ func getRandomNumInRange(limit float64) float64 {
 }
 
 func (g *Game) Update() error {
-	// if it hasn't reached the target position
-	if g.purgerActor.TargetPosition[0] == g.purgerActor.Position[0] &&
-		g.purgerActor.TargetPosition[1] == g.purgerActor.Position[1] {
-		targetposX := getRandomNumInRange(screenWidth)
-		targetposY := getRandomNumInRange(screenHeight)
-
-		log.Print("posx", targetposX)
-		log.Print("posy", targetposY)
-		g.purgerActor.TargetPosition = [2]float64{targetposX, targetposY}
+	g.keys = inpututil.AppendPressedKeys(g.keys[:0])
+	if len(g.keys) > 0 {
+		g.purgerActor.HandleInput(g.keys)
+		log.Print(g.keys[0].String())
+		log.Print("ss")
 	}
 
-	// TODO: set move speed
-	newPosition := [2]float64{g.purgerActor.Position[0] + 0.1, g.purgerActor.Position[1] + 0.1}
-	g.purgerActor.Move(newPosition)
+	// if it hasn't reached the target position
+	// if g.purgerActor.TargetPosition[0] == g.purgerActor.Position[0] &&
+	// 	g.purgerActor.TargetPosition[1] == g.purgerActor.Position[1] {
+	// 	targetposX := getRandomNumInRange(screenWidth)
+	// 	targetposY := getRandomNumInRange(screenHeight)
+
+	// 	log.Print("posx", targetposX)
+	// 	log.Print("posy", targetposY)
+	// 	g.purgerActor.TargetPosition = [2]float64{targetposX, targetposY}
+	// }
+
+	// // TODO: set move speed
+	// newPosition := [2]float64{g.purgerActor.Position[0] + 0.1, g.purgerActor.Position[1] + 0.1}
+	// g.purgerActor.Move(newPosition)
 
 	g.count++
 	return nil
