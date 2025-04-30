@@ -9,19 +9,20 @@ import (
 
 type Actor struct {
 	Position       [2]float64
-	TargetPosition [2]float64
-	image          *ebiten.Image
-	inputMap       map[string]string
+	Image          *ebiten.Image
 	Speed          float64
 	MoveDirectionX float64
 	MoveDirectionY float64
 }
 
-func (actor *Actor) Move(position [2]float64) {
-	drawOptions := &ebiten.DrawImageOptions{}
-	translationMatrix := drawOptions.GeoM
-	actor.Position = position
-	translationMatrix.Translate(position[0], position[1])
+func NewActor(position [2]float64, image *ebiten.Image, speed float64) *Actor {
+	return &Actor{
+		Position:       position,
+		Image:          image,
+		Speed:          1.0, // Default speed
+		MoveDirectionX: 0.0, // Default direction
+		MoveDirectionY: 0.0,
+	}
 }
 
 func (actor *Actor) HandleInput(inputDeviceActionButtonNames []ebiten.Key) {
@@ -32,33 +33,18 @@ func (actor *Actor) HandleInput(inputDeviceActionButtonNames []ebiten.Key) {
 	actor.MoveDirectionX = 0
 	actor.MoveDirectionY = 0
 
-	actionHandler := inputDeviceActionButtonNames[0].String()
-	if actionHandler == "ArrowRight" {
-		actor.MoveDirectionX = 1
-	}
-	if actionHandler == "ArrowUp" {
-		actor.MoveDirectionY = -1
-	}
-	if actionHandler == "ArrowDown" {
-		actor.MoveDirectionY = 1
-	}
-	if actionHandler == "ArrowLeft" {
-		actor.MoveDirectionX = -1
-	}
-
-	if len(inputDeviceActionButtonNames) == 2 {
-		secondPressedButton := inputDeviceActionButtonNames[1].String()
-		if secondPressedButton == "ArrowRight" {
-			actor.MoveDirectionX = 1
-		}
-		if secondPressedButton == "ArrowUp" {
-			actor.MoveDirectionY = -1
-		}
-		if secondPressedButton == "ArrowDown" {
-			actor.MoveDirectionY = 1
-		}
-		if secondPressedButton == "ArrowLeft" {
-			actor.MoveDirectionX = -1
+	for _, key := range inputDeviceActionButtonNames {
+		if ebiten.IsKeyPressed(key) {
+			switch key {
+			case ebiten.KeyArrowLeft:
+				actor.MoveDirectionX = -1
+			case ebiten.KeyArrowRight:
+				actor.MoveDirectionX = 1
+			case ebiten.KeyArrowUp:
+				actor.MoveDirectionY = -1
+			case ebiten.KeyArrowDown:
+				actor.MoveDirectionY = 1
+			}
 		}
 	}
 
@@ -84,12 +70,4 @@ func (actor *Actor) MoveIn(direction [2]float64) {
 		log.Print(dx)
 		log.Print(dy)
 	}
-}
-
-func (actor *Actor) MoveRight() {
-	drawOptions := &ebiten.DrawImageOptions{}
-	translationMatrix := drawOptions.GeoM
-	newPosition := [2]float64{actor.Position[0] + 0.1, actor.Position[1] + 0.1}
-	actor.Position = newPosition
-	translationMatrix.Translate(newPosition[0], newPosition[1])
 }

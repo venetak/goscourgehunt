@@ -14,60 +14,54 @@ import (
 )
 
 type Game struct {
-	count        int32
-	scourgeActor actor.Actor
-	purgerActor  actor.Actor
+	scourgeActor *actor.Actor
+	purgerActor  *actor.Actor
+	NPCActors    []*actor.Actor
 	keys         []ebiten.Key
 }
-
-var (
-	scourgeImage *ebiten.Image
-	purgerImage  *ebiten.Image
-)
 
 const (
 	screenWidth  = 600
 	screenHeight = 400
-
-	frameOX     = 0
-	frameOY     = 32
-	frameWidth  = 32
-	frameHeight = 32
-	frameCount  = 8
 )
 
+func newGame(playerActor *actor.Actor, npcActors []*actor.Actor) *Game {
+	return &Game{
+		scourgeActor: playerActor,
+		purgerActor:  playerActor,
+		NPCActors:    npcActors,
+	}
+}
+
+// Utils ---- move to module?
 func getRandomNumInRange(limit float64) float64 {
 	return 0 + rand.Float64()*(limit-0)
+}
+
+// Rendering utils --- module?
+func drawImageWithMatrix(screen *ebiten.Image, image *ebiten.Image, transformationM *ebiten.DrawImageOptions) {
+	screen.DrawImage(image, transformationM)
+}
+
+func createTexture(imageFile *os.File) *ebiten.Image {
+	img, _, err := image.Decode(imageFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return ebiten.NewImageFromImage(img)
 }
 
 func (g *Game) Update() error {
 	g.keys = inpututil.AppendPressedKeys(g.keys[:0])
 	if len(g.keys) > 0 {
 		g.purgerActor.HandleInput(g.keys)
-		log.Print(g.keys[0].String())
-		log.Print("ss")
 	}
-
-	// if it hasn't reached the target position
-	// if g.purgerActor.TargetPosition[0] == g.purgerActor.Position[0] &&
-	// 	g.purgerActor.TargetPosition[1] == g.purgerActor.Position[1] {
-	// 	targetposX := getRandomNumInRange(screenWidth)
-	// 	targetposY := getRandomNumInRange(screenHeight)
-
-	// 	log.Print("posx", targetposX)
-	// 	log.Print("posy", targetposY)
-	// 	g.purgerActor.TargetPosition = [2]float64{targetposX, targetposY}
-	// }
-
-	// // TODO: set move speed
-	// newPosition := [2]float64{g.purgerActor.Position[0] + 0.1, g.purgerActor.Position[1] + 0.1}
-	// g.purgerActor.Move(newPosition)
-
-	g.count++
 	return nil
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
+	// TODO: cache images?
 	op := &ebiten.DrawImageOptions{}
 	opArthas := &ebiten.DrawImageOptions{}
 
@@ -77,20 +71,10 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	opArthas.GeoM.Scale(0.2, 0.2)
 	opArthas.GeoM.Translate(g.purgerActor.Position[0], g.purgerActor.Position[1])
 
-	drawImageWithMatrix(screen, scourgeImage, op)
-	drawImageWithMatrix(screen, purgerImage, opArthas)
-}
-
-func drawImageWithMatrix(screen *ebiten.Image, image *ebiten.Image, transformationM *ebiten.DrawImageOptions) {
-	// with animation
-	// i := (g.count / 20) % frameCount
-	// i := 1
-	// log.Print(i)
-	// sx, sy := frameOX+i*frameWidth, frameOY
-	// screen.DrawImage(scourgeImage.SubImage(image.Rect(sx, sy, sx+frameWidth, sy+frameHeight)).(*ebiten.Image), op)
-	// screen.DrawImage(scourgeImage.SubImage(image.Rect(60, 120, 90, 150)).(*ebiten.Image), op)
-
-	screen.DrawImage(image, transformationM)
+	drawImageWithMatrix(screen, g.purgerActor.Image, opArthas)
+	for _, npc := range g.NPCActors {
+		drawImageWithMatrix(screen, npc.Image, op)
+	}
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
@@ -107,26 +91,17 @@ func loadFile(path string) *os.File {
 }
 
 func main() {
-	scourgeTexture := loadFile("pudge.png")
-	purgerTexture := loadFile("purger9000.PNG")
-
-	img, _, err := image.Decode(scourgeTexture)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	scourgeImage = ebiten.NewImageFromImage(img)
-
-	art, _, err := image.Decode(purgerTexture)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	purgerImage = ebiten.NewImageFromImage(art)
+	// TODO: proper error handling
+	scourgeTexture := createTexture(loadFile("pudge.png"))
+	purgerTexture := createTexture(loadFile("purger9000.PNG"))
 
 	ebiten.SetWindowSize(screenWidth*2, screenHeight*2)
 	ebiten.SetWindowTitle("Animation (Ebitengine Demo)")
-	if err := ebiten.RunGame(&Game{}); err != nil {
+
+	playerActor := actor.NewActor([2]float64{0, 0}, purgerTexture, 0)
+	npcActor := actor.NewActor([2]float64{0, 0}, scourgeTexture, 0)
+
+	if err := ebiten.RunGame(newGame(playerActor, []*actor.Actor{npcActor})); err != nil {
 		log.Fatal(err)
 	}
 }
