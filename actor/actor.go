@@ -8,30 +8,27 @@ import (
 )
 
 type Actor struct {
-	Position       [2]float64
-	Image          *ebiten.Image
-	Speed          float64
-	MoveDirectionX float64
-	MoveDirectionY float64
+	Position          [2]float64
+	prevFramePosition [2]float64
+	Image             *ebiten.Image
+	Speed             float64
+	MoveDirectionX    float64
+	MoveDirectionY    float64
 }
 
 func NewActor(position [2]float64, image *ebiten.Image, speed float64) *Actor {
 	return &Actor{
-		Position:       position,
-		Image:          image,
-		Speed:          1.0, // Default speed
-		MoveDirectionX: 0.0, // Default direction
-		MoveDirectionY: 0.0,
+		Position:          position,
+		prevFramePosition: position,
+		Image:             image,
+		Speed:             3.0, // Default speed
+		MoveDirectionX:    0.0, // Default direction
+		MoveDirectionY:    0.0,
 	}
 }
 
 func (actor *Actor) HandleInput(inputDeviceActionButtonNames []ebiten.Key) {
-	// TODO: create maps for other input devices and merge them
-	//
-	actor.Speed = 1
-
-	actor.MoveDirectionX = 0
-	actor.MoveDirectionY = 0
+	actor.resetMoveDirection()
 
 	for _, key := range inputDeviceActionButtonNames {
 		if ebiten.IsKeyPressed(key) {
@@ -52,7 +49,22 @@ func (actor *Actor) HandleInput(inputDeviceActionButtonNames []ebiten.Key) {
 	actor.MoveIn(newPosition)
 }
 
+func (actor *Actor) resetMoveDirection() {
+	actor.MoveDirectionX = 0
+	actor.MoveDirectionY = 0
+}
+
+func (actor *Actor) snapshotCurrentPosition() {
+	actor.prevFramePosition = actor.Position
+}
+
+func (actor *Actor) RollbackPosition() {
+	actor.Position = actor.prevFramePosition
+}
+
 func (actor *Actor) MoveIn(direction [2]float64) {
+	actor.snapshotCurrentPosition()
+
 	dx := direction[0]
 	dy := direction[1]
 

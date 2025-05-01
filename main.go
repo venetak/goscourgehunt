@@ -56,7 +56,9 @@ func (g *Game) Update() error {
 	g.keys = inpututil.AppendPressedKeys(g.keys[:0])
 	if len(g.keys) > 0 {
 		g.purgerActor.HandleInput(g.keys)
-		g.purgerActor.CollidesWith(g.NPCActors[0])
+		if g.purgerActor.CollidesWith(g.NPCActors[0]) {
+			g.purgerActor.RollbackPosition()
+		}
 	}
 	return nil
 }
