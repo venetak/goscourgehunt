@@ -65,9 +65,38 @@ func (actor *Actor) MoveIn(direction [2]float64) {
 
 		actor.Position[0] += dx
 		actor.Position[1] += dy
-
-		log.Print("-----------------------")
-		log.Print(dx)
-		log.Print(dy)
 	}
+}
+
+type BoundingRect struct {
+	PositionX float64
+	PositionY float64
+	Width     float64
+	Height    float64
+}
+
+func calcBoundingRect(actor *Actor) *BoundingRect {
+	playerRect := actor.Image.Bounds()
+
+	return &BoundingRect{
+		PositionX: actor.Position[0],
+		PositionY: actor.Position[1],
+		Width:     float64(playerRect.Dx()),
+		Height:    float64(playerRect.Dy()),
+	}
+}
+
+func (actor *Actor) CollidesWith(npc *Actor) bool {
+	playerRect := calcBoundingRect(actor)
+	npcRect := calcBoundingRect(npc)
+
+	if playerRect.PositionX < npcRect.PositionX+npcRect.Width &&
+		playerRect.PositionX+playerRect.Width > npcRect.PositionX &&
+		playerRect.PositionY < npcRect.PositionY+npcRect.Height &&
+		playerRect.PositionY+playerRect.Height > npcRect.PositionY {
+		log.Print("Collision!!!!!--------")
+		return true
+	}
+
+	return false
 }

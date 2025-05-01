@@ -21,7 +21,7 @@ type Game struct {
 }
 
 const (
-	screenWidth  = 600
+	screenWidth  = 1000
 	screenHeight = 400
 )
 
@@ -56,6 +56,7 @@ func (g *Game) Update() error {
 	g.keys = inpututil.AppendPressedKeys(g.keys[:0])
 	if len(g.keys) > 0 {
 		g.purgerActor.HandleInput(g.keys)
+		g.purgerActor.CollidesWith(g.NPCActors[0])
 	}
 	return nil
 }
@@ -65,10 +66,10 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	op := &ebiten.DrawImageOptions{}
 	opArthas := &ebiten.DrawImageOptions{}
 
-	op.GeoM.Scale(0.5, 0.5)
-	op.GeoM.Translate(100, 100)
+	// op.GeoM.Scale(0.5, 0.5)
+	op.GeoM.Translate(g.NPCActors[0].Position[0], g.NPCActors[0].Position[1])
 
-	opArthas.GeoM.Scale(0.2, 0.2)
+	// opArthas.GeoM.Scale(0.2, 0.2)
 	opArthas.GeoM.Translate(g.purgerActor.Position[0], g.purgerActor.Position[1])
 
 	drawImageWithMatrix(screen, g.purgerActor.Image, opArthas)
@@ -78,7 +79,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	return 320, 240
+	return 1000, 400
 }
 
 func loadFile(path string) *os.File {
@@ -93,13 +94,13 @@ func loadFile(path string) *os.File {
 func main() {
 	// TODO: proper error handling
 	scourgeTexture := createTexture(loadFile("pudge.png"))
-	purgerTexture := createTexture(loadFile("purger9000.PNG"))
+	purgerTexture := createTexture(loadFile("pudge.png"))
 
 	ebiten.SetWindowSize(screenWidth*2, screenHeight*2)
 	ebiten.SetWindowTitle("Animation (Ebitengine Demo)")
 
 	playerActor := actor.NewActor([2]float64{0, 0}, purgerTexture, 0)
-	npcActor := actor.NewActor([2]float64{0, 0}, scourgeTexture, 0)
+	npcActor := actor.NewActor([2]float64{200, 200}, scourgeTexture, 0)
 
 	if err := ebiten.RunGame(newGame(playerActor, []*actor.Actor{npcActor})); err != nil {
 		log.Fatal(err)
