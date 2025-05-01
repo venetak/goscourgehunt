@@ -54,6 +54,7 @@ func createTexture(imageFile *os.File) *ebiten.Image {
 
 func (g *Game) Update() error {
 	g.keys = inpututil.AppendPressedKeys(g.keys[:0])
+	g.NPCActors[0].Patrol()
 	if len(g.keys) > 0 {
 		g.purgerActor.HandleInput(g.keys)
 		if g.purgerActor.CollidesWith(g.NPCActors[0]) {
@@ -101,8 +102,8 @@ func main() {
 	ebiten.SetWindowSize(screenWidth*2, screenHeight*2)
 	ebiten.SetWindowTitle("Animation (Ebitengine Demo)")
 
-	playerActor := actor.NewActor([2]float64{0, 0}, purgerTexture, 0)
-	npcActor := actor.NewActor([2]float64{200, 200}, scourgeTexture, 0)
+	playerActor := actor.NewActor([2]float64{0, 0}, purgerTexture, 3)
+	npcActor := actor.NewActor([2]float64{200, 200}, scourgeTexture, 1)
 
 	if err := ebiten.RunGame(newGame(playerActor, []*actor.Actor{npcActor})); err != nil {
 		log.Fatal(err)
