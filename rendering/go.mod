@@ -1,11 +1,8 @@
-module github/actor
+module github.com/rendering
 
 go 1.24.2
 
-require (
-	github.com/hajimehoshi/ebiten/v2 v2.8.8
-	utils v0.0.0-00010101000000-000000000000
-)
+require github.com/hajimehoshi/ebiten/v2 v2.8.8
 
 require (
 	github.com/ebitengine/gomobile v0.0.0-20240911145611-4856209ac325 // indirect
@@ -15,5 +12,3 @@ require (
 	golang.org/x/sync v0.8.0 // indirect
 	golang.org/x/sys v0.25.0 // indirect
 )
-
-replace utils => ../utils

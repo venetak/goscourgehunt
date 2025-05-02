@@ -1,21 +1,23 @@
 package main
 
 import (
-	"image"
 	_ "image/png"
 	"log"
-	"os"
 
 	"github/actor"
 
+	"utils"
+
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
+	"github.com/rendering"
 )
 
 type Game struct {
 	scourgeActor *actor.Actor
 	purgerActor  *actor.Actor
 	NPCActors    []*actor.Actor
+	State        string
 	keys         []ebiten.Key
 }
 
@@ -32,20 +34,6 @@ func newGame(playerActor *actor.Actor, npcActors []*actor.Actor) *Game {
 	}
 }
 
-// Rendering utils --- module?
-func drawImageWithMatrix(screen *ebiten.Image, image *ebiten.Image, transformationM *ebiten.DrawImageOptions) {
-	screen.DrawImage(image, transformationM)
-}
-
-func createTexture(imageFile *os.File) *ebiten.Image {
-	img, _, err := image.Decode(imageFile)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return ebiten.NewImageFromImage(img)
-}
-
 func (g *Game) Update() error {
 	g.keys = inpututil.AppendPressedKeys(g.keys[:0])
 	for npcActor := range g.NPCActors {
@@ -54,9 +42,9 @@ func (g *Game) Update() error {
 	g.NPCActors[0].Patrol()
 	if len(g.keys) > 0 {
 		g.purgerActor.HandleInput(g.keys)
-		if g.purgerActor.CollidesWith(g.NPCActors[0]) {
-			g.purgerActor.RollbackPosition()
-		}
+		// if g.purgerActor.CollidesWith(g.NPCActors[0]) {
+		// 	g.purgerActor.RollbackPosition()
+		// }
 	}
 	return nil
 }
@@ -66,33 +54,24 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	for _, npc := range g.NPCActors {
 		op := &ebiten.DrawImageOptions{}
 		op.GeoM.Translate(npc.Position[0], npc.Position[1])
-		drawImageWithMatrix(screen, npc.Image, op)
+		rendering.DrawImageWithMatrix(screen, npc.Image, op)
 	}
 
 	opArthas := &ebiten.DrawImageOptions{}
 	opArthas.GeoM.Translate(g.purgerActor.Position[0], g.purgerActor.Position[1])
 
-	drawImageWithMatrix(screen, g.purgerActor.Image, opArthas)
+	rendering.DrawImageWithMatrix(screen, g.purgerActor.Image, opArthas)
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
 	return 1000, 400
 }
 
-func loadFile(path string) *os.File {
-	file, err := os.Open(path) // Path to your image
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return file
-}
-
 func main() {
 	// TODO: proper error handling
-	scourgeTexture := createTexture(loadFile("pudge.png"))
-	scourgeTexture1 := createTexture(loadFile("scourge.png"))
-	purgerTexture := createTexture(loadFile("arthas.png"))
+	scourgeTexture := rendering.CreateTexture(utils.LoadFile("./assets/pudge.png"))
+	scourgeTexture1 := rendering.CreateTexture(utils.LoadFile("./assets/scourge.png"))
+	purgerTexture := rendering.CreateTexture(utils.LoadFile("./assets/arthas.png"))
 
 	ebiten.SetWindowSize(screenWidth*2, screenHeight*2)
 	ebiten.SetWindowTitle("Animation (Ebitengine Demo)")

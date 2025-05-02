@@ -4,7 +4,9 @@ go 1.24.2
 
 require (
 	github.com/hajimehoshi/ebiten/v2 v2.8.8
+	github.com/rendering v0.0.0-00010101000000-000000000000
 	github/actor v0.0.0-00010101000000-000000000000
+	utils v0.0.0-00010101000000-000000000000
 )
 
 require (
@@ -19,3 +21,7 @@ require (
 replace github/actor => ./actor
 
 replace github/input => ./input
+
+replace github.com/rendering => ./rendering
+
+replace utils => ./utils

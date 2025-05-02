@@ -3,7 +3,8 @@ package actor
 import (
 	"log"
 	"math"
-	"math/rand"
+
+	"utils"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -120,11 +121,6 @@ func (actor *Actor) CollidesWith(npc *Actor) bool {
 	return false
 }
 
-// Utils ---- move to module?
-func getRandomNumInRange(limit float64) float64 {
-	return 0 + rand.Float64()*(limit-0)
-}
-
 func (actor *Actor) MoveTo(targetPosition [2]float64) {
 	x := actor.Position[0]
 	y := actor.Position[1]
@@ -155,11 +151,12 @@ func (actor *Actor) MoveTo(targetPosition [2]float64) {
 	}
 }
 
+// TODO: patrol in a radius of initial position
 func (actor *Actor) Patrol() {
 	if actor.Position[0] == actor.targetPosition[0] &&
 		actor.Position[1] == actor.targetPosition[1] {
-		actor.targetPosition[0] = getRandomNumInRange(400)
-		actor.targetPosition[1] = getRandomNumInRange(300)
+		actor.targetPosition[0] = utils.GetRandomNumInRange(400)
+		actor.targetPosition[1] = utils.GetRandomNumInRange(300)
 	}
 
 	actor.MoveTo(actor.targetPosition)
