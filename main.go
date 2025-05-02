@@ -4,7 +4,6 @@ import (
 	"image"
 	_ "image/png"
 	"log"
-	"math/rand"
 	"os"
 
 	"github/actor"
@@ -33,11 +32,6 @@ func newGame(playerActor *actor.Actor, npcActors []*actor.Actor) *Game {
 	}
 }
 
-// Utils ---- move to module?
-func getRandomNumInRange(limit float64) float64 {
-	return 0 + rand.Float64()*(limit-0)
-}
-
 // Rendering utils --- module?
 func drawImageWithMatrix(screen *ebiten.Image, image *ebiten.Image, transformationM *ebiten.DrawImageOptions) {
 	screen.DrawImage(image, transformationM)
@@ -54,6 +48,9 @@ func createTexture(imageFile *os.File) *ebiten.Image {
 
 func (g *Game) Update() error {
 	g.keys = inpututil.AppendPressedKeys(g.keys[:0])
+	for npcActor := range g.NPCActors {
+		g.NPCActors[npcActor].Patrol()
+	}
 	g.NPCActors[0].Patrol()
 	if len(g.keys) > 0 {
 		g.purgerActor.HandleInput(g.keys)
@@ -66,19 +63,16 @@ func (g *Game) Update() error {
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	// TODO: cache images?
-	op := &ebiten.DrawImageOptions{}
+	for _, npc := range g.NPCActors {
+		op := &ebiten.DrawImageOptions{}
+		op.GeoM.Translate(npc.Position[0], npc.Position[1])
+		drawImageWithMatrix(screen, npc.Image, op)
+	}
+
 	opArthas := &ebiten.DrawImageOptions{}
-
-	// op.GeoM.Scale(0.5, 0.5)
-	op.GeoM.Translate(g.NPCActors[0].Position[0], g.NPCActors[0].Position[1])
-
-	// opArthas.GeoM.Scale(0.2, 0.2)
 	opArthas.GeoM.Translate(g.purgerActor.Position[0], g.purgerActor.Position[1])
 
 	drawImageWithMatrix(screen, g.purgerActor.Image, opArthas)
-	for _, npc := range g.NPCActors {
-		drawImageWithMatrix(screen, npc.Image, op)
-	}
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
@@ -97,15 +91,21 @@ func loadFile(path string) *os.File {
 func main() {
 	// TODO: proper error handling
 	scourgeTexture := createTexture(loadFile("pudge.png"))
-	purgerTexture := createTexture(loadFile("pudge.png"))
+	scourgeTexture1 := createTexture(loadFile("scourge.png"))
+	purgerTexture := createTexture(loadFile("arthas.png"))
 
 	ebiten.SetWindowSize(screenWidth*2, screenHeight*2)
 	ebiten.SetWindowTitle("Animation (Ebitengine Demo)")
 
-	playerActor := actor.NewActor([2]float64{0, 0}, purgerTexture, 3)
-	npcActor := actor.NewActor([2]float64{200, 200}, scourgeTexture, 1)
+	playerActor := actor.NewActor([2]float64{0, 0}, purgerTexture, 14)
+	npcActor := actor.NewActor([2]float64{200, 200}, scourgeTexture, 0.5)
+	npcActor1 := actor.NewActor([2]float64{200, 200}, scourgeTexture1, 4)
+	npcActor2 := actor.NewActor([2]float64{100, 200}, scourgeTexture1, 1)
+	npcActor3 := actor.NewActor([2]float64{150, 50}, scourgeTexture1, 1)
+	npcActor4 := actor.NewActor([2]float64{200, 200}, scourgeTexture1, 2)
+	npcActor5 := actor.NewActor([2]float64{200, 200}, scourgeTexture1, 0.5)
 
-	if err := ebiten.RunGame(newGame(playerActor, []*actor.Actor{npcActor})); err != nil {
+	if err := ebiten.RunGame(newGame(playerActor, []*actor.Actor{npcActor, npcActor1, npcActor2, npcActor3, npcActor4, npcActor5})); err != nil {
 		log.Fatal(err)
 	}
 }

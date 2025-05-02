@@ -134,22 +134,32 @@ func (actor *Actor) MoveTo(targetPosition [2]float64) {
 
 	teta := math.Atan2(dy, dx)
 
-	actor.Position[0] += math.Cos(teta) * actor.Speed
-	actor.Position[1] += math.Sin(teta) * actor.Speed
+	nextPositionX := actor.Position[0] + math.Cos(teta)*actor.Speed
+	nextPositionY := actor.Position[1] + math.Sin(teta)*actor.Speed
+
+	actor.Position[0] = nextPositionX
+	actor.Position[1] = nextPositionY
+
+	// if x or y oversteps the target position, set it to the target position (clamping)
+	if dx > 0 && nextPositionX > actor.targetPosition[0] {
+		actor.Position[0] = actor.targetPosition[0]
+	}
+	if dx < 0 && nextPositionX < actor.targetPosition[0] {
+		actor.Position[0] = actor.targetPosition[0]
+	}
+	if dy > 0 && nextPositionY > actor.targetPosition[1] {
+		actor.Position[1] = actor.targetPosition[1]
+	}
+	if dy < 0 && nextPositionY < actor.targetPosition[1] {
+		actor.Position[1] = actor.targetPosition[1]
+	}
 }
 
 func (actor *Actor) Patrol() {
-	// TODO: propertly clamp the target position, do not use whole numbers with whole number step to avoid overstepping...
-	if int(actor.Position[0]) == int(actor.targetPosition[0]) &&
-		int(actor.Position[1]) == int(actor.targetPosition[1]) {
+	if actor.Position[0] == actor.targetPosition[0] &&
+		actor.Position[1] == actor.targetPosition[1] {
 		actor.targetPosition[0] = getRandomNumInRange(400)
 		actor.targetPosition[1] = getRandomNumInRange(300)
-	} else {
-		log.Print("Patrol------------------")
-		log.Print("actor.Position[0]=======")
-		log.Print(actor.Position[0])
-		log.Print("actor.Position[1]=======")
-		log.Print(actor.Position[1])
 	}
 
 	actor.MoveTo(actor.targetPosition)
