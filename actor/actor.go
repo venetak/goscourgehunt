@@ -10,23 +10,27 @@ import (
 )
 
 type Actor struct {
-	Position          [2]float64
-	prevFramePosition [2]float64
-	targetPosition    [2]float64
-	Image             *ebiten.Image
-	Speed             float64
-	MoveDirectionX    float64
-	MoveDirectionY    float64
+	Position        [2]float64
+	initialPosition [2]float64
+	targetPosition  [2]float64
+	Image           *ebiten.Image
+	Speed           float64
+	MoveDirectionX  float64
+	MoveDirectionY  float64
+	moveRange       float64
 }
 
 func NewActor(position [2]float64, image *ebiten.Image, speed float64) *Actor {
+
 	return &Actor{
-		Position:          position,
-		prevFramePosition: position,
-		Image:             image,
-		Speed:             speed, // Default speed
-		MoveDirectionX:    0.0,   // Default direction
-		MoveDirectionY:    0.0,
+		Position:        position,
+		initialPosition: position,
+		targetPosition:  position,
+		Image:           image,
+		Speed:           speed, // Default speed
+		MoveDirectionX:  0.0,   // Default direction
+		MoveDirectionY:  0.0,
+		moveRange:       100.0, // Default move range
 	}
 }
 
@@ -62,17 +66,11 @@ func (actor *Actor) resetMoveDirection() {
 	actor.MoveDirectionY = 0
 }
 
-func (actor *Actor) snapshotCurrentPosition() {
-	actor.prevFramePosition = actor.Position
-}
-
 func (actor *Actor) RollbackPosition() {
-	actor.Position = actor.prevFramePosition
+	actor.MoveIn([2]float64{-actor.MoveDirectionX, -actor.MoveDirectionY})
 }
 
 func (actor *Actor) MoveIn(direction [2]float64) {
-	actor.snapshotCurrentPosition()
-
 	dx := direction[0]
 	dy := direction[1]
 
@@ -152,11 +150,11 @@ func (actor *Actor) MoveTo(targetPosition [2]float64) {
 }
 
 // TODO: patrol in a radius of initial position
-func (actor *Actor) Patrol() {
+func (actor *Actor) Patrol(moveRange float64) {
 	if actor.Position[0] == actor.targetPosition[0] &&
 		actor.Position[1] == actor.targetPosition[1] {
-		actor.targetPosition[0] = utils.GetRandomNumInRange(400)
-		actor.targetPosition[1] = utils.GetRandomNumInRange(300)
+		actor.targetPosition[0] = utils.GetRandomNumInRange(actor.initialPosition[0]-actor.moveRange, actor.initialPosition[0]+actor.moveRange)
+		actor.targetPosition[1] = utils.GetRandomNumInRange(actor.initialPosition[1]-actor.moveRange, actor.initialPosition[1]+actor.moveRange)
 	}
 
 	actor.MoveTo(actor.targetPosition)

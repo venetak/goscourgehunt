@@ -16,6 +16,6 @@ func LoadFile(path string) *os.File {
 }
 
 // Utils ---- move to module?
-func GetRandomNumInRange(limit float64) float64 {
-	return 0 + rand.Float64()*(limit-0)
+func GetRandomNumInRange(minLimit float64, maxLimit float64) float64 {
+	return minLimit + rand.Float64()*(maxLimit-minLimit)
 }
