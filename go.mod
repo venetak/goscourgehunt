@@ -3,10 +3,11 @@ module scourgehunt
 go 1.24.2
 
 require (
+	github.com/gameplay v0.0.0-00010101000000-000000000000
 	github.com/hajimehoshi/ebiten/v2 v2.8.8
 	github.com/rendering v0.0.0-00010101000000-000000000000
 	github/actor v0.0.0-00010101000000-000000000000
-	utils v0.0.0-00010101000000-000000000000
+	github/utils v0.0.0-00010101000000-000000000000
 )
 
 require (
@@ -27,4 +28,6 @@ replace github/input => ./input
 
 replace github.com/rendering => ./rendering
 
-replace utils => ./utils
+replace github/utils => ./utils
+
+replace github.com/gameplay => ./gameplay

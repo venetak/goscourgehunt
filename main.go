@@ -7,8 +7,9 @@ import (
 
 	"github/actor"
 
-	"utils"
+	"github/utils"
 
+	"github.com/gameplay"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/examples/resources/fonts"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
@@ -38,6 +39,11 @@ const (
 	GameEnded   GameState = "Ended"
 )
 
+var GameModeMap = map[int]string{
+	1: "Invincible",
+	2: "Frostmourne Hungers",
+}
+
 const sampleText = "Press space key to start"
 
 type Game struct {
@@ -46,10 +52,12 @@ type Game struct {
 	NPCActors    []*actor.Actor
 	State        GameState
 	keys         []ebiten.Key
+	GameMode     int
+	Gameplay     gameplay.Gameplay
 }
 
 const (
-	screenWidth  = 900
+	screenWidth  = 800
 	screenHeight = 400
 	lineSpacing  = 0
 	fontSize     = 10
@@ -64,6 +72,19 @@ func newGame(playerActor *actor.Actor, npcActors []*actor.Actor) *Game {
 	}
 }
 
+func (g *Game) SpawnActors(screen *ebiten.Image) {
+	for _, npc := range g.NPCActors {
+		op := &ebiten.DrawImageOptions{}
+		op.GeoM.Translate(npc.Position[0], npc.Position[1])
+		rendering.DrawImageWithMatrix(screen, npc.Image, op)
+	}
+
+	opArthas := &ebiten.DrawImageOptions{}
+	opArthas.GeoM.Translate(g.purgerActor.Position[0], g.purgerActor.Position[1])
+
+	rendering.DrawImageWithMatrix(screen, g.purgerActor.Image, opArthas)
+}
+
 func (g *Game) Update() error {
 	g.keys = inpututil.AppendPressedKeys(g.keys[:0])
 
@@ -71,53 +92,51 @@ func (g *Game) Update() error {
 	case GameMenu:
 		if ebiten.IsKeyPressed(ebiten.KeySpace) {
 			g.State = GameStarted
+			g.GameMode = 1
+			// TODO: rename g to game
+			// AND Gameplay to PlayMode
+			// and you'll have game.PlayMode
+			g.Gameplay = gameplay.GetGameplay(g.GameMode)
 		}
 	case GamePaused:
-
+		if ebiten.IsKeyPressed(ebiten.KeyEscape) {
+			g.State = GameStarted
+			return nil
+		}
 	case GameStarted:
-		for npcActor := range g.NPCActors {
-			g.NPCActors[npcActor].Patrol(10)
+		if ebiten.IsKeyPressed(ebiten.KeyP) {
+			g.State = GamePaused
+			return nil
 		}
-		// g.NPCActors[0].Patrol(10)
-		if len(g.keys) > 0 {
-			g.purgerActor.HandleInput(g.keys)
-			if g.purgerActor.CollidesWith(g.NPCActors[0]) {
-				g.purgerActor.RollbackPosition()
-			}
-		}
+
+		g.Gameplay.SpawnActors(g.purgerActor, g.NPCActors, g.keys)
+		// for npcActor := range g.NPCActors {
+		// 	g.NPCActors[npcActor].Patrol(10)
+		// }
+		// if len(g.keys) > 0 {
+		// 	g.purgerActor.HandleInput(g.keys)
+		// 	if g.purgerActor.CollidesWith(g.NPCActors[0]) {
+		// 		g.purgerActor.RollbackPosition()
+		// 	}
+		// }
 	}
 	return nil
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
+	// ebitenutil.DebugPrint(screen, fmt.Sprintf("Image at: (0, 0)"))
 	// TODO: cache images?
 	switch g.State {
 	case GameMenu:
-		op := &text.DrawOptions{}
-		op.LineSpacing = lineSpacing
-
-		width, height := text.Measure(sampleText, &text.GoTextFace{
-			Source: arcadeFaceSource,
-			Size:   fontSize,
-		}, lineSpacing)
-
-		op.GeoM.Reset()
-		op.GeoM.Translate(screenWidth/2-(width/2), height*5)
-		text.Draw(screen, sampleText, &text.GoTextFace{
-			Source: arcadeFaceSource,
-			Size:   fontSize,
-		}, op)
+		rendering.DrawCenteredText(screen, sampleText, screenWidth/2, screenHeight/2, arcadeFaceSource, fontSize)
 	case GameStarted:
-		for _, npc := range g.NPCActors {
-			op := &ebiten.DrawImageOptions{}
-			op.GeoM.Translate(npc.Position[0], npc.Position[1])
-			rendering.DrawImageWithMatrix(screen, npc.Image, op)
-		}
+		g.SpawnActors(screen)
+	case GamePaused:
+		g.SpawnActors(screen)
 
-		opArthas := &ebiten.DrawImageOptions{}
-		opArthas.GeoM.Translate(g.purgerActor.Position[0], g.purgerActor.Position[1])
-
-		rendering.DrawImageWithMatrix(screen, g.purgerActor.Image, opArthas)
+		choiceText := "Game Paused"
+		rendering.DrawBox(screen, screenWidth/2-100, screenHeight/2-50, 200, 100)
+		rendering.DrawCenteredText(screen, choiceText, screenWidth/2, screenHeight/2, arcadeFaceSource, fontSize)
 	}
 }
 

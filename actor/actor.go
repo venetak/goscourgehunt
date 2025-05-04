@@ -4,7 +4,7 @@ import (
 	"log"
 	"math"
 
-	"utils"
+	"github/utils"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
