@@ -104,6 +104,10 @@ func calcBoundingRect(actor *Actor) *BoundingRect {
 	}
 }
 
+// AABB (Axis-Aligned Bounding Box) Collision detection
+// Checks if two actors are colliding based on their bounding rectangles.
+// - npc (non-player character) The second actor
+// returns true if they are colliding, and false otherwise.
 func (actor *Actor) CollidesWith(npc *Actor) bool {
 	playerRect := calcBoundingRect(actor)
 	npcRect := calcBoundingRect(npc)
@@ -119,6 +123,9 @@ func (actor *Actor) CollidesWith(npc *Actor) bool {
 	return false
 }
 
+// Moves the actor towards the target position.
+// Calculates the angle between the positive x-axis and the line connecting the actor's current position to the target position
+// todetirmine the direction of movement.
 func (actor *Actor) MoveTo(targetPosition [2]float64) {
 	x := actor.Position[0]
 	y := actor.Position[1]
@@ -149,7 +156,9 @@ func (actor *Actor) MoveTo(targetPosition [2]float64) {
 	}
 }
 
-// TODO: patrol in a radius of initial position
+// Initiates a patrol movement for the actor.
+// It patrols between the initial position and a random target position within a specified move range.
+// If the actor reaches the target position, it generates a new random target position within the move range.
 func (actor *Actor) Patrol(moveRange float64) {
 	if actor.Position[0] == actor.targetPosition[0] &&
 		actor.Position[1] == actor.targetPosition[1] {
