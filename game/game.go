@@ -112,12 +112,12 @@ func (g *Game) Update() error {
 			g.PlayMode = newPlayMode(g.GameMode)
 		}
 	case GamePaused:
-		if ebiten.IsKeyPressed(ebiten.KeyEscape) {
+		if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
 			g.State.status = GameStarted
 			return nil
 		}
 	case GameStarted:
-		if ebiten.IsKeyPressed(ebiten.KeyEscape) {
+		if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
 			g.State.status = GamePaused
 			return nil
 		}
