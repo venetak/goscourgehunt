@@ -4,12 +4,16 @@ import (
 	"log"
 	"math"
 
+	"github.com/google/uuid"
+
 	"github/utils"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
 type Actor struct {
+	Id              string
+	Name            string
 	Position        [2]float64
 	initialPosition [2]float64
 	targetPosition  [2]float64
@@ -20,9 +24,11 @@ type Actor struct {
 	moveRange       float64
 }
 
-func NewActor(position [2]float64, image *ebiten.Image, speed float64) *Actor {
+func NewActor(position [2]float64, image *ebiten.Image, speed float64, name string) *Actor {
 
 	return &Actor{
+		Id:              uuid.New().String(),
+		Name:            name,
 		Position:        position,
 		initialPosition: position,
 		targetPosition:  position,

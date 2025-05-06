@@ -3,6 +3,7 @@ module github/actor
 go 1.24.2
 
 require (
+	github.com/google/uuid v1.6.0
 	github.com/hajimehoshi/ebiten/v2 v2.8.8
 	github/utils v0.0.0-00010101000000-000000000000
 )

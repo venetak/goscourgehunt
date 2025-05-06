@@ -52,3 +52,23 @@ func DrawCenteredText(screen *ebiten.Image, textToDraw string, x, y float64, fac
 		Size:   fontSize,
 	}, op)
 }
+
+// TODO: consider reducing the number of parameters
+func DrawPlayerPromptAtActorPos(screen *ebiten.Image, textToDraw string, actorPos [2]float64, faceSource *text.GoTextFaceSource, fontSize float64) {
+	// Draw the text at the actor's position
+	posX := actorPos[0]
+	posY := actorPos[1] - 10
+	// DrawBox(screen, float32(posX), float32(posY-10/2), 350, 20)
+
+	DrawText(screen, textToDraw, posX, posY, faceSource, fontSize)
+}
+
+func DrawText(screen *ebiten.Image, textToDraw string, x, y float64, faceSource *text.GoTextFaceSource, fontSize float64) {
+	op := &text.DrawOptions{}
+	op.GeoM.Translate(x, y)
+
+	text.Draw(screen, textToDraw, &text.GoTextFace{
+		Source: faceSource,
+		Size:   fontSize,
+	}, op)
+}
