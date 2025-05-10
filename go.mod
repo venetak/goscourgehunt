@@ -2,6 +2,16 @@ module scourgehunt
 
 go 1.24.2
 
+replace github/actor => ./actor
+
+replace github/input => ./input
+
+replace github.com/rendering => ./rendering
+
+replace github/utils => ./utils
+
+replace github.com/game => ./game
+
 require (
 	github.com/game v0.0.0-00010101000000-000000000000
 	github.com/hajimehoshi/ebiten/v2 v2.8.8
@@ -22,13 +32,3 @@ require (
 	golang.org/x/sys v0.25.0 // indirect
 	golang.org/x/text v0.18.0 // indirect
 )
-
-replace github/actor => ./actor
-
-replace github/input => ./input
-
-replace github.com/rendering => ./rendering
-
-replace github/utils => ./utils
-
-replace github.com/game => ./game

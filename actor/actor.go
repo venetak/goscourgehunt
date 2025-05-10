@@ -22,6 +22,7 @@ type Actor struct {
 	MoveDirectionX  float64
 	MoveDirectionY  float64
 	moveRange       float64
+	Draw            bool
 }
 
 func NewActor(position [2]float64, image *ebiten.Image, speed float64, name string) *Actor {
@@ -32,6 +33,7 @@ func NewActor(position [2]float64, image *ebiten.Image, speed float64, name stri
 		Position:        position,
 		initialPosition: position,
 		targetPosition:  position,
+		Draw:            true,
 		Image:           image,
 		Speed:           speed, // Default speed
 		MoveDirectionX:  0.0,   // Default direction

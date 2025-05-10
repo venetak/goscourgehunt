@@ -22,13 +22,23 @@ var (
 type GameStatus string
 
 // Constants defining the allowed game states
-const (
+var (
 	GameMenu     GameStatus = "Menu"
 	GameStarted  GameStatus = "Started"
 	GamePaused   GameStatus = "Paused"
 	GameEnded    GameStatus = "Ended"
 	AwaitingUser GameStatus = "Waiting"
 )
+
+var StatusMap = map[GameStatus]int{
+	GameMenu:     0,
+	GameStarted:  1,
+	GamePaused:   2,
+	GameEnded:    3,
+	AwaitingUser: 4,
+}
+
+var currentGameStatus GameStatus = GameMenu
 
 const (
 	ScreenWidth  = 1000
@@ -56,7 +66,7 @@ func init() {
 const sampleText = "Press space key to start"
 
 type GameState struct {
-	status           GameStatus
+	Status           int
 	PromptPlayer     bool
 	PromptPlayerText string
 	PurgedCount      int
@@ -77,7 +87,7 @@ type Game struct {
 
 func NewGame(playerActor *actor.Actor, npcActors []*actor.Actor) *Game {
 	return &Game{
-		State:        &GameState{status: GameMenu},
+		State:        &GameState{Status: StatusMap[GameMenu]},
 		scourgeActor: playerActor,
 		purgerActor:  playerActor,
 		NPCActors:    npcActors,
@@ -86,6 +96,9 @@ func NewGame(playerActor *actor.Actor, npcActors []*actor.Actor) *Game {
 
 func (g *Game) SpawnActors(screen *ebiten.Image) {
 	for _, npc := range g.NPCActors {
+		if !npc.Draw {
+			continue
+		}
 		op := &ebiten.DrawImageOptions{}
 		op.GeoM.Translate(npc.Position[0], npc.Position[1])
 		rendering.DrawImageWithMatrix(screen, npc.Image, op)
@@ -107,30 +120,30 @@ func (g *Game) SparedCountStr() string {
 func (g *Game) Update() error {
 	g.keys = inpututil.AppendPressedKeys(g.keys[:0])
 
-	switch g.State.status {
-	case GameMenu:
+	switch g.State.Status {
+	case StatusMap[GameMenu]:
 		if ebiten.IsKeyPressed(ebiten.KeySpace) {
-			g.State.status = GameStarted
+			g.State.Status = StatusMap[GameStarted]
 			g.GameMode = 1
 			g.PlayMode = newPlayMode(g.GameMode)
 		}
-	case GamePaused:
+	case StatusMap[GamePaused]:
 		if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
-			g.State.status = GameStarted
+			g.State.Status = StatusMap[GameStarted]
 			return nil
 		}
-	case GameStarted:
+	case StatusMap[GameStarted]:
 		if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
-			g.State.status = GamePaused
+			g.State.Status = StatusMap[GamePaused]
 			return nil
 		}
 		// starts patrolling
 		g.PlayMode.InitActors(g.purgerActor, g.NPCActors, g.keys)
 		if len(g.keys) > 0 {
-			g.PlayMode.HandleKeyboardInput(g)
+			g.PlayMode.HandleKeyboardInput(g.State, g.purgerActor, g.NPCActors, g.keys)
 		}
-	case AwaitingUser:
-		g.PlayMode.HandlePlayerInput(g)
+	case StatusMap[AwaitingUser]:
+		g.PlayMode.HandlePlayerInput(g.State, g.NPCActors, g.State.Target)
 	}
 	return nil
 }
@@ -138,14 +151,14 @@ func (g *Game) Update() error {
 func (g *Game) Draw(screen *ebiten.Image) {
 	// ebitenutil.DebugPrint(screen, fmt.Sprintf("Image at: (0, 0)"))
 	// TODO: cache images?
-	switch g.State.status {
-	case GameMenu:
+	switch g.State.Status {
+	case StatusMap[GameMenu]:
 		rendering.DrawCenteredText(screen, sampleText, ScreenWidth/2, ScreenHeight/2, arcadeFaceSource, FontSize)
-	case GameStarted:
+	case StatusMap[GameStarted]:
 		g.SpawnActors(screen)
 		rendering.DrawText(screen, g.PurgedCountStr(), ScreenWidth-100, 0, arcadeFaceSource, FontSize)
 		rendering.DrawText(screen, g.SparedCountStr(), ScreenWidth-100, 20, arcadeFaceSource, FontSize)
-	case GamePaused:
+	case StatusMap[GamePaused]:
 		rendering.DrawText(screen, g.PurgedCountStr(), ScreenWidth-100, 0, arcadeFaceSource, FontSize)
 
 		rendering.DrawText(screen, g.SparedCountStr(), ScreenWidth-100, 20, arcadeFaceSource, FontSize)
@@ -155,12 +168,12 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		rendering.DrawCenteredText(screen, choiceText, ScreenWidth/2, ScreenHeight/2, arcadeFaceSource, FontSize)
 
 		rendering.DrawText(screen, g.SparedCountStr(), ScreenWidth-100, 20, arcadeFaceSource, FontSize)
-	case AwaitingUser:
+	case StatusMap[AwaitingUser]:
 		rendering.DrawText(screen, g.PurgedCountStr(), ScreenWidth-100, 0, arcadeFaceSource, FontSize)
 
 		rendering.DrawText(screen, g.SparedCountStr(), ScreenWidth-100, 20, arcadeFaceSource, FontSize)
 		g.SpawnActors(screen)
-		g.PlayMode.PauseGame(g, screen)
+		g.PlayMode.PauseGame(g.State, g.purgerActor, screen)
 	}
 }
 
@@ -171,13 +184,13 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (w, h int) {
 // PlayMode interface
 // -----------------------------------------------------------
 type PlayMode interface {
-	EncounterNPCs(game *Game, npc *actor.Actor)
+	EncounterNPCs(gameState *GameState, npc *actor.Actor)
 	InitActors(*actor.Actor, []*actor.Actor, []ebiten.Key)
-	PauseGame(g *Game, screen *ebiten.Image)
-	Purge(g *Game, npcActor *actor.Actor)
-	Spare(g *Game, npcActor *actor.Actor)
-	HandleKeyboardInput(g *Game)
-	HandlePlayerInput(g *Game)
+	PauseGame(gameState *GameState, player *actor.Actor, screen *ebiten.Image)
+	Purge(gameState *GameState, gameActors []*actor.Actor, npcActor *actor.Actor)
+	Spare(gameState *GameState, gameActors []*actor.Actor, npcActor *actor.Actor)
+	HandleKeyboardInput(gameState *GameState, player *actor.Actor, gameActors []*actor.Actor, keys []ebiten.Key)
+	HandlePlayerInput(gameState *GameState, npcActors []*actor.Actor, npcActor *actor.Actor)
 }
 
 type ModeInvincible struct {
@@ -201,13 +214,12 @@ func newPlayMode(gameMode int) PlayMode {
 
 // InvincibleGameplay implements the Gameplay interface
 // -----------------------------------------------------------
-func (playmode *ModeInvincible) EncounterNPCs(game *Game, npc *actor.Actor) {
+func (playmode *ModeInvincible) EncounterNPCs(gameState *GameState, npc *actor.Actor) {
 	// Pause game (stop all movement)
-	state := game.State
-	game.State.Target = npc
-	state.status = AwaitingUser
-	state.PromptPlayer = true
-	state.PromptPlayerText = "Press P to Purge or S to Spare"
+	gameState.Target = npc
+	gameState.Status = StatusMap[AwaitingUser]
+	gameState.PromptPlayer = true
+	gameState.PromptPlayerText = "Press P to Purge or S to Spare"
 }
 
 func (playmode *ModeInvincible) UpdateScore() {
@@ -216,67 +228,72 @@ func (playmode *ModeInvincible) UpdateScore() {
 	// g.savedCount += 1
 }
 
-func (playmode *ModeInvincible) PauseGame(g *Game, screen *ebiten.Image) {
-	rendering.DrawPlayerPromptAtActorPos(screen, g.State.PromptPlayerText, g.purgerActor.Position, arcadeFaceSource, 10)
+func (playmode *ModeInvincible) PauseGame(gameState *GameState, player *actor.Actor, screen *ebiten.Image) {
+	rendering.DrawPlayerPromptAtActorPos(screen, gameState.PromptPlayerText, player.Position, arcadeFaceSource, 10)
 }
 
-func (playmde *ModeInvincible) RemoveActor(g *Game, npcActor *actor.Actor) {
-	for i, npc := range g.NPCActors {
-		if npc.Id == npcActor.Id {
-			g.NPCActors = append(g.NPCActors[:i], g.NPCActors[i+1:]...)
-			break
-		}
-	}
+func (playmde *ModeInvincible) RemoveActor(gameActors []*actor.Actor, npcActor *actor.Actor) {
+	npcActor.Draw = false
 }
 
-func (playmode *ModeInvincible) checkGameOverAndUpdateState(g *Game) {
-	if len(g.NPCActors) == 0 {
-		g.State.status = GameEnded
+func (playmode *ModeInvincible) checkGameOverAndUpdateState(gameState *GameState, gameActors []*actor.Actor) {
+	if len(gameActors) == 0 {
+		gameState.Status = StatusMap[GameEnded]
 	} else {
-		g.State.status = GameStarted
+		gameState.Status = StatusMap[GameStarted]
 	}
 }
 
-func (playmode *ModeInvincible) removeNPC(g *Game, npcActor *actor.Actor) {
-	playmode.RemoveActor(g, npcActor)
-	g.State.PromptPlayer = false
+func (playmode *ModeInvincible) removeNPC(gameState *GameState, gameActors []*actor.Actor, npcActor *actor.Actor) {
+	playmode.RemoveActor(gameActors, npcActor)
+	gameState.PromptPlayer = false
 
 	// verbose: true...
-	playmode.checkGameOverAndUpdateState(g)
+	playmode.checkGameOverAndUpdateState(gameState, gameActors)
 }
 
-func (playmode *ModeInvincible) Purge(g *Game, npcActor *actor.Actor) {
-	g.State.PurgedCount += 1
-	playmode.removeNPC(g, npcActor)
+func (playmode *ModeInvincible) Purge(gameState *GameState, gameActors []*actor.Actor, npcActor *actor.Actor) {
+	gameState.PurgedCount += 1
+	playmode.removeNPC(gameState, gameActors, npcActor)
 }
 
-func (playmode *ModeInvincible) Spare(g *Game, npcActor *actor.Actor) {
-	g.State.SparedCount += 1
-	playmode.removeNPC(g, npcActor)
+func (playmode *ModeInvincible) Spare(gameState *GameState, gameActors []*actor.Actor, npcActor *actor.Actor) {
+	gameState.SparedCount += 1
+	playmode.removeNPC(gameState, gameActors, npcActor)
 }
 
 // This is a little strage, should it be part of the game package?
 func (playmode *ModeInvincible) InitActors(player *actor.Actor, npcActors []*actor.Actor, pressedKeys []ebiten.Key) {
 	for npcActor := range npcActors {
+		if !npcActors[npcActor].Draw {
+			continue
+		}
 		npcActors[npcActor].Patrol(10)
 	}
 }
 
-func (playmode *ModeInvincible) HandleKeyboardInput(g *Game) {
-	g.purgerActor.HandleInput(g.keys)
-	g.purgerActor.SetLimitBounds(ScreenWidthFloat, ScreenHeightFloat)
+func (playmode *ModeInvincible) HandleKeyboardInput(gameState *GameState, player *actor.Actor, gameActors []*actor.Actor, keys []ebiten.Key) {
+	player.HandleInput(keys)
+	player.SetLimitBounds(ScreenWidthFloat, ScreenHeightFloat)
 	// What if the NPC goes over the player?
-	if g.purgerActor.CollidesWith(g.NPCActors[0]) {
-		g.PlayMode.EncounterNPCs(g, g.NPCActors[0])
+	for _, npcActor := range gameActors {
+		if !npcActor.Draw {
+			continue
+		}
+		if player.CollidesWith(npcActor) {
+			playmode.EncounterNPCs(gameState, npcActor)
+		}
 	}
 }
 
-func (playmode *ModeInvincible) HandlePlayerInput(g *Game) {
+// TODO: might be better to move this to the main input handler
+func (playmode *ModeInvincible) HandlePlayerInput(gameState *GameState, npcActors []*actor.Actor, npcActor *actor.Actor) {
+
 	if inpututil.IsKeyJustPressed(ebiten.KeyP) {
-		g.PlayMode.Purge(g, g.State.Target)
+		playmode.Purge(gameState, npcActors, npcActor)
 	}
 	if inpututil.IsKeyJustPressed(ebiten.KeyS) {
-		g.PlayMode.Spare(g, g.State.Target)
+		playmode.Spare(gameState, npcActors, npcActor)
 	}
 }
 
