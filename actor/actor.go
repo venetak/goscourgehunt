@@ -174,3 +174,22 @@ func (actor *Actor) Patrol(moveRange float64) {
 
 	actor.MoveTo(actor.targetPosition)
 }
+
+func (actor *Actor) SetLimitBounds(limiX, limitY float64) {
+	playerRect := calcBoundingRect(actor)
+	playerWidth := playerRect.Width
+	playerHeight := playerRect.Height
+
+	if playerRect.PositionX < 0 {
+		actor.Position[0] = 0
+	}
+	if playerRect.PositionY < 0 {
+		actor.Position[1] = 0
+	}
+	if playerRect.PositionX+playerWidth > limiX {
+		actor.Position[0] = limiX - playerWidth
+	}
+	if playerRect.PositionY+playerHeight > limitY {
+		actor.Position[1] = limitY - playerHeight
+	}
+}
