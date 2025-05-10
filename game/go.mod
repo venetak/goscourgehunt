@@ -9,6 +9,7 @@ replace github.com/rendering => ../rendering
 replace github/utils => ../utils
 
 require (
+	github.com/gameplay v0.0.0-00010101000000-000000000000
 	github.com/hajimehoshi/ebiten/v2 v2.8.8
 	github.com/rendering v0.0.0-00010101000000-000000000000
 	github/actor v0.0.0-00010101000000-000000000000
@@ -19,6 +20,7 @@ require (
 	github.com/ebitengine/hideconsole v1.0.0 // indirect
 	github.com/ebitengine/purego v0.8.0 // indirect
 	github.com/go-text/typesetting v0.2.0 // indirect
+	github.com/google/uuid v1.6.0 // indirect
 	github.com/jezek/xgb v1.1.1 // indirect
 	github/utils v0.0.0-00010101000000-000000000000 // indirect
 	golang.org/x/image v0.20.0 // indirect
@@ -26,3 +28,5 @@ require (
 	golang.org/x/sys v0.25.0 // indirect
 	golang.org/x/text v0.18.0 // indirect
 )
+
+replace github.com/gameplay => ../gameplay
