@@ -25,6 +25,13 @@ type Actor struct {
 	Draw            bool
 }
 
+type BoundingRect struct {
+	PositionX float64
+	PositionY float64
+	Width     float64
+	Height    float64
+}
+
 func NewActor(position [2]float64, image *ebiten.Image, speed float64, name string) *Actor {
 
 	return &Actor{
@@ -33,12 +40,12 @@ func NewActor(position [2]float64, image *ebiten.Image, speed float64, name stri
 		Position:        position,
 		initialPosition: position,
 		targetPosition:  position,
-		Draw:            true,
 		Image:           image,
 		Speed:           speed, // Default speed
 		MoveDirectionX:  0.0,   // Default direction
 		MoveDirectionY:  0.0,
 		moveRange:       100.0, // Default move range
+		Draw:            true,
 	}
 }
 
@@ -74,10 +81,16 @@ func (actor *Actor) resetMoveDirection() {
 	actor.MoveDirectionY = 0
 }
 
+// RollbackPosition moves the actor back to its previous position.
+// This is useful when the actor collides with another actor or an obstacle.
 func (actor *Actor) RollbackPosition() {
 	actor.MoveIn([2]float64{-actor.MoveDirectionX, -actor.MoveDirectionY})
 }
 
+// MoveIn moves the actor in the specified direction.
+// The direction is represented as a 2D vector (dx, dy).
+// The function calculates the distance to move based on the speed of the actor.
+// It normalizes the direction vector to ensure smooth movement, even when moving diagonally.
 func (actor *Actor) MoveIn(direction [2]float64) {
 	dx := direction[0]
 	dy := direction[1]
@@ -94,13 +107,9 @@ func (actor *Actor) MoveIn(direction [2]float64) {
 	}
 }
 
-type BoundingRect struct {
-	PositionX float64
-	PositionY float64
-	Width     float64
-	Height    float64
-}
-
+// calcBoundingRect calculates the bounding rectangle of the actor.
+// The bounding rectangle is used for collision detection.
+// It takes into account the actor's position and the dimensions of the image.
 func calcBoundingRect(actor *Actor) *BoundingRect {
 	playerRect := actor.Image.Bounds()
 
@@ -177,6 +186,8 @@ func (actor *Actor) Patrol(moveRange float64) {
 	actor.MoveTo(actor.targetPosition)
 }
 
+// SetLimitBounds sets the limits for the actor's movement.
+// It ensures that the actor does not move outside the specified bounds (limiX, limitY).
 func (actor *Actor) SetLimitBounds(limiX, limitY float64) {
 	playerRect := calcBoundingRect(actor)
 	playerWidth := playerRect.Width

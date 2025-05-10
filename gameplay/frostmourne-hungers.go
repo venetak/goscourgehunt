@@ -6,6 +6,9 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
+type ModeFrostmourneHungers struct {
+}
+
 func (playmode *ModeFrostmourneHungers) EncounterNPCs(gameState *GameState, npc *actor.Actor) {
 	// If the player is witin range/in collision with the NPC
 	// Enable an action PURGE! button that the player can press
@@ -18,9 +21,15 @@ func (playmode *ModeFrostmourneHungers) InitActors(*actor.Actor, []*actor.Actor,
 	// Include people, undead and abominations, animals
 	// More NPCs, more undead and higher level abbominations
 }
-func (playmode *ModeFrostmourneHungers) PauseGame(gameState *GameState, player *actor.Actor, screen *ebiten.Image) {
+
+func (playmode *ModeFrostmourneHungers) PropmptPlayer(gameState *GameState, player *actor.Actor, screen *ebiten.Image) {
+	// Draw the player prompt at the actor's position on the screen
+}
+
+func (playmode *ModeFrostmourneHungers) PauseGame(gameState *GameState, screen *ebiten.Image, ScreenWidth, ScreenHeight float64) {
 	// Same as the other, but the text might be different
 }
+
 func (playmode *ModeFrostmourneHungers) Purge(gameState *GameState, gameActors []*actor.Actor, npcActor *actor.Actor) {
 	// Implement mass purge as well.
 	// Some of the NPCs could come back and undead

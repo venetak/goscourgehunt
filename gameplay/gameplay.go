@@ -19,33 +19,26 @@ type GameState struct {
 	Target           *actor.Actor
 }
 
-// PlayMode interface
-// -----------------------------------------------------------
 type PlayMode interface {
 	EncounterNPCs(gameState *GameState, npc *actor.Actor)
 	InitActors(*actor.Actor, []*actor.Actor, []ebiten.Key)
-	PauseGame(gameState *GameState, player *actor.Actor, screen *ebiten.Image)
+	PauseGame(gameState *GameState, screen *ebiten.Image, ScreenWidth, ScreenHeight float64)
+	PropmptPlayer(gameState *GameState, player *actor.Actor, screen *ebiten.Image)
 	Purge(gameState *GameState, gameActors []*actor.Actor, npcActor *actor.Actor)
 	Spare(gameState *GameState, gameActors []*actor.Actor, npcActor *actor.Actor)
 	HandleKeyboardInput(gameState *GameState, player *actor.Actor, gameActors []*actor.Actor, keys []ebiten.Key)
 	HandlePlayerInput(gameState *GameState, npcActors []*actor.Actor, npcActor *actor.Actor)
 }
 
-type ModeInvincible struct {
-}
-
-type ModeFrostmourneHungers struct {
-}
-
+// Game mode factory
+// This function creates a new PlayMode instance based on the provided gameMode parameter.
 func NewPlayMode(gameMode int) PlayMode {
 	switch gameMode {
 	case 1:
 		return &ModeInvincible{}
 	case 2:
-		// return &ModeFrostmourneHungers{}
+		return &ModeFrostmourneHungers{}
 	default:
 		return nil
 	}
-
-	return &ModeInvincible{}
 }

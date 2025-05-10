@@ -19,6 +19,12 @@ var (
 	faceSource *text.GoTextFaceSource
 )
 
+const (
+	ScreenWidth  = 1000
+	ScreenHeight = 550
+	FontSize     = 10
+)
+
 func init() {
 	s, err := text.NewGoTextFaceSource(bytes.NewReader(fonts.PressStart2P_ttf))
 	if err != nil {
@@ -55,7 +61,7 @@ func DrawBox(screen *ebiten.Image, x, y, width, height float32) {
 }
 
 // Do I need this?
-func DrawCenteredText(screen *ebiten.Image, textToDraw string, x, y float64, fontSize float64) {
+func DrawCenteredText(screen *ebiten.Image, textToDraw string, x, y float64) {
 	op := &text.DrawOptions{}
 	op.GeoM.Translate(x, y)
 	op.LayoutOptions.PrimaryAlign = text.AlignCenter
@@ -63,26 +69,26 @@ func DrawCenteredText(screen *ebiten.Image, textToDraw string, x, y float64, fon
 
 	text.Draw(screen, textToDraw, &text.GoTextFace{
 		Source: faceSource,
-		Size:   fontSize,
+		Size:   FontSize,
 	}, op)
 }
 
 // TODO: consider reducing the number of parameters
-func DrawPlayerPromptAtActorPos(screen *ebiten.Image, textToDraw string, actorPos [2]float64, fontSize float64) {
+func DrawPlayerPromptAtActorPos(screen *ebiten.Image, textToDraw string, actorPos [2]float64) {
 	// Draw the text at the actor's position
 	posX := actorPos[0]
 	posY := actorPos[1] - 10
 	// DrawBox(screen, float32(posX), float32(posY-10/2), 350, 20)
 
-	DrawText(screen, textToDraw, posX, posY, fontSize)
+	DrawText(screen, textToDraw, posX, posY)
 }
 
-func DrawText(screen *ebiten.Image, textToDraw string, x, y float64, fontSize float64) {
+func DrawText(screen *ebiten.Image, textToDraw string, x, y float64) {
 	op := &text.DrawOptions{}
 	op.GeoM.Translate(x, y)
 
 	text.Draw(screen, textToDraw, &text.GoTextFace{
 		Source: faceSource,
-		Size:   fontSize,
+		Size:   FontSize,
 	}, op)
 }

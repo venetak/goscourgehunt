@@ -24,8 +24,6 @@ var (
 const (
 	ScreenWidth  = 1000
 	ScreenHeight = 550
-	LineSpacing  = 0
-	FontSize     = 10
 )
 
 const ScreenWidthFloat = float64(ScreenWidth)
@@ -58,20 +56,20 @@ func NewGame(playerActor *actor.Actor, npcActors []*actor.Actor) *Game {
 	}
 }
 
+func (g *Game) DrawActor(screen *ebiten.Image, actor *actor.Actor) {
+	op := &ebiten.DrawImageOptions{}
+	op.GeoM.Translate(actor.Position[0], actor.Position[1])
+	rendering.DrawImageWithMatrix(screen, actor.Image, op)
+}
+
 func (g *Game) SpawnActors(screen *ebiten.Image) {
 	for _, npc := range g.NPCActors {
 		if !npc.Draw {
 			continue
 		}
-		op := &ebiten.DrawImageOptions{}
-		op.GeoM.Translate(npc.Position[0], npc.Position[1])
-		rendering.DrawImageWithMatrix(screen, npc.Image, op)
+		g.DrawActor(screen, npc)
 	}
-
-	opArthas := &ebiten.DrawImageOptions{}
-	opArthas.GeoM.Translate(g.purgerActor.Position[0], g.purgerActor.Position[1])
-
-	rendering.DrawImageWithMatrix(screen, g.purgerActor.Image, opArthas)
+	g.DrawActor(screen, g.purgerActor)
 }
 
 func (g *Game) PurgedCountStr() string {
@@ -79,6 +77,15 @@ func (g *Game) PurgedCountStr() string {
 }
 func (g *Game) SparedCountStr() string {
 	return "Spared: " + strconv.Itoa(g.State.SparedCount)
+}
+
+func (g *Game) InitHomeScreen(screen *ebiten.Image) {
+	rendering.DrawCenteredText(screen, sampleText, ScreenWidth/2, ScreenHeight/2)
+}
+
+func (g *Game) InitKillFeed(screen *ebiten.Image) {
+	rendering.DrawText(screen, g.PurgedCountStr(), ScreenWidth-100, 0)
+	rendering.DrawText(screen, g.SparedCountStr(), ScreenWidth-100, 20)
 }
 
 func (g *Game) Update() error {
@@ -113,37 +120,27 @@ func (g *Game) Update() error {
 	return nil
 }
 
+func (g *Game) SetupCommonGameComponents(screen *ebiten.Image) {
+	g.InitKillFeed(screen)
+	g.SpawnActors(screen)
+}
+
 func (g *Game) Draw(screen *ebiten.Image) {
-	// ebitenutil.DebugPrint(screen, fmt.Sprintf("Image at: (0, 0)"))
 	// TODO: cache images?
 	switch g.State.Status {
 	case StatusMap[GameMenu]:
-		rendering.DrawCenteredText(screen, sampleText, ScreenWidth/2, ScreenHeight/2, FontSize)
+		g.InitHomeScreen(screen)
 	case StatusMap[GameStarted]:
-		g.SpawnActors(screen)
-		rendering.DrawText(screen, g.PurgedCountStr(), ScreenWidth-100, 0, FontSize)
-		rendering.DrawText(screen, g.SparedCountStr(), ScreenWidth-100, 20, FontSize)
+		g.SetupCommonGameComponents(screen)
 	case StatusMap[GamePaused]:
-		rendering.DrawText(screen, g.PurgedCountStr(), ScreenWidth-100, 0, FontSize)
-
-		rendering.DrawText(screen, g.SparedCountStr(), ScreenWidth-100, 20, FontSize)
-		g.SpawnActors(screen)
-		choiceText := "Game Paused"
-		rendering.DrawBox(screen, ScreenWidth/2-100, ScreenHeight/2-50, 200, 100)
-		rendering.DrawCenteredText(screen, choiceText, ScreenWidth/2, ScreenHeight/2, FontSize)
-
-		rendering.DrawText(screen, g.SparedCountStr(), ScreenWidth-100, 20, FontSize)
+		g.SetupCommonGameComponents(screen)
+		g.PlayMode.PauseGame(g.State, screen, ScreenWidthFloat, ScreenHeightFloat)
 	case StatusMap[AwaitingUser]:
-		rendering.DrawText(screen, g.PurgedCountStr(), ScreenWidth-100, 0, FontSize)
-
-		rendering.DrawText(screen, g.SparedCountStr(), ScreenWidth-100, 20, FontSize)
-		g.SpawnActors(screen)
-		g.PlayMode.PauseGame(g.State, g.purgerActor, screen)
+		g.SetupCommonGameComponents(screen)
+		g.PlayMode.PropmptPlayer(g.State, g.purgerActor, screen)
 	}
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (w, h int) {
 	return ScreenWidth, ScreenHeight
 }
-
-// PlayMode interface

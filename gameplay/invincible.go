@@ -11,6 +11,9 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
+type ModeInvincible struct {
+}
+
 // Constants defining the allowed game states
 var (
 	GameMenu     GameStatus = "Menu"
@@ -28,8 +31,9 @@ var StatusMap = map[GameStatus]int{
 	AwaitingUser: 4,
 }
 
-// InvincibleGameplay implements the Gameplay interface
-// -----------------------------------------------------------
+// EncounterNPCs is called when the player collides with an NPC.
+// It pauses the game and prompts the player to take action.
+// The game state is set to AwaitingUser, and the player is prompted to either purge or spare the NPC.
 func (playmode *ModeInvincible) EncounterNPCs(gameState *GameState, npc *actor.Actor) {
 	// Pause game (stop all movement)
 	gameState.Target = npc
@@ -44,14 +48,27 @@ func (playmode *ModeInvincible) UpdateScore() {
 	// g.savedCount += 1
 }
 
-func (playmode *ModeInvincible) PauseGame(gameState *GameState, player *actor.Actor, screen *ebiten.Image) {
-	rendering.DrawPlayerPromptAtActorPos(screen, gameState.PromptPlayerText, player.Position, 10)
+// It draws the player prompt at the actor's position on the screen.
+func (playmode *ModeInvincible) PauseGame(gameState *GameState, screen *ebiten.Image, ScreenWidth, ScreenHeight float64) {
+	choiceText := "Game Paused"
+	rendering.DrawBox(screen, float32(ScreenWidth/2-100), float32(ScreenHeight/2-50), 200, 100)
+	rendering.DrawCenteredText(screen, choiceText, ScreenWidth/2, ScreenHeight/2)
 }
 
+// It draws the player prompt at the actor's position on the screen.
+func (playmode *ModeInvincible) PropmptPlayer(gameState *GameState, player *actor.Actor, screen *ebiten.Image) {
+	rendering.DrawPlayerPromptAtActorPos(screen, gameState.PromptPlayerText, player.Position)
+}
+
+// RemoveActor is called to remove an actor from the game.
+// It sets the actor's Draw property to false, effectively removing it from the game.
+// TODO: optimize by either removing the actor from the slice or using a pool of actors
 func (playmde *ModeInvincible) RemoveActor(gameActors []*actor.Actor, npcActor *actor.Actor) {
 	npcActor.Draw = false
 }
 
+// checkGameOverAndUpdateState checks if there are any remaining actors in the game.
+// If there are no actors left, it sets the game state to GameEnded.
 func (playmode *ModeInvincible) checkGameOverAndUpdateState(gameState *GameState, gameActors []*actor.Actor) {
 	if len(gameActors) == 0 {
 		gameState.Status = StatusMap[GameEnded]
@@ -60,6 +77,9 @@ func (playmode *ModeInvincible) checkGameOverAndUpdateState(gameState *GameState
 	}
 }
 
+// removeNPC is called to remove an NPC from the game.
+// It removes the actor from the game, sets the PromptPlayer to false,
+// and checks if the game is over.
 func (playmode *ModeInvincible) removeNPC(gameState *GameState, gameActors []*actor.Actor, npcActor *actor.Actor) {
 	playmode.RemoveActor(gameActors, npcActor)
 	gameState.PromptPlayer = false
@@ -68,17 +88,24 @@ func (playmode *ModeInvincible) removeNPC(gameState *GameState, gameActors []*ac
 	playmode.checkGameOverAndUpdateState(gameState, gameActors)
 }
 
+// Purge is called when the player chooses to purge an NPC.
+// It increments the purged count and removes the NPC from the game.
+// It also checks if the game is over.
 func (playmode *ModeInvincible) Purge(gameState *GameState, gameActors []*actor.Actor, npcActor *actor.Actor) {
 	gameState.PurgedCount += 1
 	playmode.removeNPC(gameState, gameActors, npcActor)
 }
 
+// Spare is called when the player chooses to spare an NPC.
+// It increments the spared count and removes the NPC from the game.
+// It also checks if the game is over.
 func (playmode *ModeInvincible) Spare(gameState *GameState, gameActors []*actor.Actor, npcActor *actor.Actor) {
 	gameState.SparedCount += 1
 	playmode.removeNPC(gameState, gameActors, npcActor)
 }
 
-// This is a little strage, should it be part of the game package?
+// InitActors initializes the actors in the game.
+// It sets the patrol speed for each NPC actor and starts their patrol behavior.
 func (playmode *ModeInvincible) InitActors(player *actor.Actor, npcActors []*actor.Actor, pressedKeys []ebiten.Key) {
 	for npcActor := range npcActors {
 		if !npcActors[npcActor].Draw {
