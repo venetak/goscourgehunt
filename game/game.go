@@ -1,29 +1,24 @@
 package game
 
 import (
-	"bytes"
 	_ "image/png"
-	"log"
 	"strconv"
 
 	"github/actor"
 
 	"github.com/gameplay"
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/examples/resources/fonts"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
-	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/rendering"
 )
 
 var (
-	arcadeFaceSource *text.GoTextFaceSource
-	StatusMap        = gameplay.StatusMap
-	GameMenu         = gameplay.GameMenu
-	GameStarted      = gameplay.GameStarted
-	GamePaused       = gameplay.GamePaused
-	GameEnded        = gameplay.GameEnded
-	AwaitingUser     = gameplay.AwaitingUser
+	StatusMap    = gameplay.StatusMap
+	GameMenu     = gameplay.GameMenu
+	GameStarted  = gameplay.GameStarted
+	GamePaused   = gameplay.GamePaused
+	GameEnded    = gameplay.GameEnded
+	AwaitingUser = gameplay.AwaitingUser
 )
 
 const (
@@ -39,14 +34,6 @@ const ScreenHeightFloat = float64(ScreenHeight)
 var GameModeMap = map[int]string{
 	1: "Invincible",
 	2: "Frostmourne Hungers",
-}
-
-func init() {
-	s, err := text.NewGoTextFaceSource(bytes.NewReader(fonts.PressStart2P_ttf))
-	if err != nil {
-		log.Fatal(err)
-	}
-	arcadeFaceSource = s
 }
 
 const sampleText = "Press space key to start"
@@ -131,25 +118,25 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	// TODO: cache images?
 	switch g.State.Status {
 	case StatusMap[GameMenu]:
-		rendering.DrawCenteredText(screen, sampleText, ScreenWidth/2, ScreenHeight/2, arcadeFaceSource, FontSize)
+		rendering.DrawCenteredText(screen, sampleText, ScreenWidth/2, ScreenHeight/2, FontSize)
 	case StatusMap[GameStarted]:
 		g.SpawnActors(screen)
-		rendering.DrawText(screen, g.PurgedCountStr(), ScreenWidth-100, 0, arcadeFaceSource, FontSize)
-		rendering.DrawText(screen, g.SparedCountStr(), ScreenWidth-100, 20, arcadeFaceSource, FontSize)
+		rendering.DrawText(screen, g.PurgedCountStr(), ScreenWidth-100, 0, FontSize)
+		rendering.DrawText(screen, g.SparedCountStr(), ScreenWidth-100, 20, FontSize)
 	case StatusMap[GamePaused]:
-		rendering.DrawText(screen, g.PurgedCountStr(), ScreenWidth-100, 0, arcadeFaceSource, FontSize)
+		rendering.DrawText(screen, g.PurgedCountStr(), ScreenWidth-100, 0, FontSize)
 
-		rendering.DrawText(screen, g.SparedCountStr(), ScreenWidth-100, 20, arcadeFaceSource, FontSize)
+		rendering.DrawText(screen, g.SparedCountStr(), ScreenWidth-100, 20, FontSize)
 		g.SpawnActors(screen)
 		choiceText := "Game Paused"
 		rendering.DrawBox(screen, ScreenWidth/2-100, ScreenHeight/2-50, 200, 100)
-		rendering.DrawCenteredText(screen, choiceText, ScreenWidth/2, ScreenHeight/2, arcadeFaceSource, FontSize)
+		rendering.DrawCenteredText(screen, choiceText, ScreenWidth/2, ScreenHeight/2, FontSize)
 
-		rendering.DrawText(screen, g.SparedCountStr(), ScreenWidth-100, 20, arcadeFaceSource, FontSize)
+		rendering.DrawText(screen, g.SparedCountStr(), ScreenWidth-100, 20, FontSize)
 	case StatusMap[AwaitingUser]:
-		rendering.DrawText(screen, g.PurgedCountStr(), ScreenWidth-100, 0, arcadeFaceSource, FontSize)
+		rendering.DrawText(screen, g.PurgedCountStr(), ScreenWidth-100, 0, FontSize)
 
-		rendering.DrawText(screen, g.SparedCountStr(), ScreenWidth-100, 20, arcadeFaceSource, FontSize)
+		rendering.DrawText(screen, g.SparedCountStr(), ScreenWidth-100, 20, FontSize)
 		g.SpawnActors(screen)
 		g.PlayMode.PauseGame(g.State, g.purgerActor, screen)
 	}

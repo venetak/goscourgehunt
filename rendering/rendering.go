@@ -1,6 +1,7 @@
 package rendering
 
 import (
+	"bytes"
 	"image"
 	"image/color"
 	_ "image/png"
@@ -8,10 +9,23 @@ import (
 	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/examples/resources/fonts"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
+
+var (
+	faceSource *text.GoTextFaceSource
+)
+
+func init() {
+	s, err := text.NewGoTextFaceSource(bytes.NewReader(fonts.PressStart2P_ttf))
+	if err != nil {
+		log.Fatal(err)
+	}
+	faceSource = s
+}
 
 // Rendering utils --- module?
 func DrawImageWithMatrix(screen *ebiten.Image, image *ebiten.Image, transformationM *ebiten.DrawImageOptions) {
@@ -41,7 +55,7 @@ func DrawBox(screen *ebiten.Image, x, y, width, height float32) {
 }
 
 // Do I need this?
-func DrawCenteredText(screen *ebiten.Image, textToDraw string, x, y float64, faceSource *text.GoTextFaceSource, fontSize float64) {
+func DrawCenteredText(screen *ebiten.Image, textToDraw string, x, y float64, fontSize float64) {
 	op := &text.DrawOptions{}
 	op.GeoM.Translate(x, y)
 	op.LayoutOptions.PrimaryAlign = text.AlignCenter
@@ -54,16 +68,16 @@ func DrawCenteredText(screen *ebiten.Image, textToDraw string, x, y float64, fac
 }
 
 // TODO: consider reducing the number of parameters
-func DrawPlayerPromptAtActorPos(screen *ebiten.Image, textToDraw string, actorPos [2]float64, faceSource *text.GoTextFaceSource, fontSize float64) {
+func DrawPlayerPromptAtActorPos(screen *ebiten.Image, textToDraw string, actorPos [2]float64, fontSize float64) {
 	// Draw the text at the actor's position
 	posX := actorPos[0]
 	posY := actorPos[1] - 10
 	// DrawBox(screen, float32(posX), float32(posY-10/2), 350, 20)
 
-	DrawText(screen, textToDraw, posX, posY, faceSource, fontSize)
+	DrawText(screen, textToDraw, posX, posY, fontSize)
 }
 
-func DrawText(screen *ebiten.Image, textToDraw string, x, y float64, faceSource *text.GoTextFaceSource, fontSize float64) {
+func DrawText(screen *ebiten.Image, textToDraw string, x, y float64, fontSize float64) {
 	op := &text.DrawOptions{}
 	op.GeoM.Translate(x, y)
 

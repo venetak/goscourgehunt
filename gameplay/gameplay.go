@@ -7,6 +7,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
+	"github.com/rendering"
 )
 
 type GameStatus string
@@ -85,7 +86,7 @@ func (playmode *ModeInvincible) UpdateScore() {
 }
 
 func (playmode *ModeInvincible) PauseGame(gameState *GameState, player *actor.Actor, screen *ebiten.Image) {
-	rendering.DrawPlayerPromptAtActorPos(screen, gameState.PromptPlayerText, player.Position, arcadeFaceSource, 10)
+	rendering.DrawPlayerPromptAtActorPos(screen, gameState.PromptPlayerText, player.Position, 10)
 }
 
 func (playmde *ModeInvincible) RemoveActor(gameActors []*actor.Actor, npcActor *actor.Actor) {
