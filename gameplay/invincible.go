@@ -69,11 +69,9 @@ func (playmde *ModeInvincible) RemoveActor(gameActors []*actor.Actor, npcActor *
 
 // checkGameOverAndUpdateState checks if there are any remaining actors in the game.
 // If there are no actors left, it sets the game state to GameEnded.
-func (playmode *ModeInvincible) checkGameOverAndUpdateState(gameState *GameState, gameActors []*actor.Actor) {
+func (playmode *ModeInvincible) CheckGameOverAndUpdateState(gameState *GameState, gameActors []*actor.Actor) {
 	if len(gameActors) == 0 {
 		gameState.Status = StatusMap[GameEnded]
-	} else {
-		gameState.Status = StatusMap[GameStarted]
 	}
 }
 
@@ -83,9 +81,7 @@ func (playmode *ModeInvincible) checkGameOverAndUpdateState(gameState *GameState
 func (playmode *ModeInvincible) removeNPC(gameState *GameState, gameActors []*actor.Actor, npcActor *actor.Actor) {
 	playmode.RemoveActor(gameActors, npcActor)
 	gameState.PromptPlayer = false
-
-	// verbose: true...
-	playmode.checkGameOverAndUpdateState(gameState, gameActors)
+	gameState.Status = StatusMap[GameStarted]
 }
 
 // Purge is called when the player chooses to purge an NPC.
@@ -130,11 +126,19 @@ func (playmode *ModeInvincible) HandleKeyboardInput(gameState *GameState, player
 
 // TODO: might be better to move this to the main input handler
 func (playmode *ModeInvincible) HandlePlayerInput(gameState *GameState, npcActors []*actor.Actor, npcActor *actor.Actor) {
-
 	if inpututil.IsKeyJustPressed(ebiten.KeyP) {
 		playmode.Purge(gameState, npcActors, npcActor)
 	}
 	if inpututil.IsKeyJustPressed(ebiten.KeyS) {
 		playmode.Spare(gameState, npcActors, npcActor)
 	}
+}
+
+// EndGame is called when the game is over.
+// It displays a message indicating that the game has ended and the player has completed the game.
+func (playmode *ModeInvincible) EndGame(gameState *GameState, screen *ebiten.Image) {
+	choiceText := "Congratulations! You have completed the game!"
+	rendering.DrawBox(screen, float32(screen.Bounds().Dx()/2-200), float32(screen.Bounds().Dy()/2-50), 400, 100)
+	rendering.DrawCenteredText(screen, choiceText, float64(screen.Bounds().Dx()/2), float64(screen.Bounds().Dy()/2))
+	gameState.Status = StatusMap[GameEnded]
 }

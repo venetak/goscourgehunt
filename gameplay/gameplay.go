@@ -28,6 +28,8 @@ type PlayMode interface {
 	Spare(gameState *GameState, gameActors []*actor.Actor, npcActor *actor.Actor)
 	HandleKeyboardInput(gameState *GameState, player *actor.Actor, gameActors []*actor.Actor, keys []ebiten.Key)
 	HandlePlayerInput(gameState *GameState, npcActors []*actor.Actor, npcActor *actor.Actor)
+	EndGame(gameState *GameState, screen *ebiten.Image)
+	CheckGameOverAndUpdateState(gameState *GameState, gameActors []*actor.Actor)
 }
 
 // Game mode factory

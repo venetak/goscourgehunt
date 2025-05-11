@@ -50,3 +50,10 @@ func (playmode *ModeFrostmourneHungers) UpdateScore() {
 	// Update score based on purged NPCs
 	// g.purgedCount += 1
 }
+
+func (playmode *ModeFrostmourneHungers) EndGame(gameState *GameState, screen *ebiten.Image) {}
+
+func (playmode *ModeFrostmourneHungers) CheckGameOverAndUpdateState(gameState *GameState, gameActors []*actor.Actor) {
+	// Check if the game is over and update the game state accordingly
+	// This could involve checking if all NPCs are purged or spared
+}

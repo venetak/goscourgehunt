@@ -64,9 +64,9 @@ func (g *Game) DrawActor(screen *ebiten.Image, actor *actor.Actor) {
 
 func (g *Game) SpawnActors(screen *ebiten.Image) {
 	for _, npc := range g.NPCActors {
-		if !npc.Draw {
-			continue
-		}
+		// if !npc.Draw {
+		// 	continue
+		// }
 		g.DrawActor(screen, npc)
 	}
 	g.DrawActor(screen, g.purgerActor)
@@ -88,15 +88,27 @@ func (g *Game) InitKillFeed(screen *ebiten.Image) {
 	rendering.DrawText(screen, g.SparedCountStr(), ScreenWidth-100, 20)
 }
 
+func (g *Game) removeHiddenActors() {
+	for key, npc := range g.NPCActors {
+		if npc.Draw {
+			continue
+		}
+		g.NPCActors = append(g.NPCActors[:key], g.NPCActors[key+1:]...)
+	}
+}
+
 func (g *Game) Update() error {
 	g.keys = inpututil.AppendPressedKeys(g.keys[:0])
+	g.removeHiddenActors()
+
+	// TODO: set default game mode and update based on user choice
+	g.GameMode = 1
+	g.PlayMode = gameplay.NewPlayMode(g.GameMode)
 
 	switch g.State.Status {
 	case StatusMap[GameMenu]:
 		if ebiten.IsKeyPressed(ebiten.KeySpace) {
 			g.State.Status = StatusMap[GameStarted]
-			g.GameMode = 1
-			g.PlayMode = gameplay.NewPlayMode(g.GameMode)
 		}
 	case StatusMap[GamePaused]:
 		if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
@@ -138,7 +150,11 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	case StatusMap[AwaitingUser]:
 		g.SetupCommonGameComponents(screen)
 		g.PlayMode.PropmptPlayer(g.State, g.purgerActor, screen)
+	case StatusMap[GameEnded]:
+		g.PlayMode.EndGame(g.State, screen)
 	}
+
+	g.PlayMode.CheckGameOverAndUpdateState(g.State, g.NPCActors)
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (w, h int) {
