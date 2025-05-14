@@ -69,3 +69,6 @@ You, Prince Arthas Menethil, arrive at the gates of Stratholme. But you are too 
     If you choose 1 - your "scourged" (scourge purged) count will increase
     If you choose to spare them - you can either try to heal them with your paladin abilities
                                  OR they can mutate in front of your eyes and turn into an Abomination, and you'll have to fight it
+ - [2] You enter Stratholme carying the wrath of 1000 death knights in your heart. You purge anything that crosses your path. You have an AoE ablity **Prge and Dismay** - places a curse upon all NPCs that it affects doing damage over time until they die. It passively stacks charges of *Menethil plague* up to 20. Each stack gives you bonus damage. If you consume all 20 - you gain **Demolish** instantly killing all in the area of **Prge and Dismay**
+ - [3] Follow the trail of Mal'Ganis to the frozen Nothrend. March though the howling winds of the northen tundra, fighting the ancient Anub'Arak.
+ - [4] Give up. There's no point in fighting. Let the scourge consume itself. Run with Jaina to Silvermoon.
