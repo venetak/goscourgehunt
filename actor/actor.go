@@ -6,7 +6,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github/utils"
+	"github.com/utils"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )

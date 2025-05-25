@@ -1,7 +1,7 @@
 package gameplay
 
 import (
-	"github/actor"
+	"github.com/actor"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -16,7 +16,7 @@ func (playmode *ModeFrostmourneHungers) EncounterNPCs(gameState *GameState, npc 
 	// If the player's AoE ability is active, the player can purge all NPCs in range
 }
 
-func (playmode *ModeFrostmourneHungers) InitActors(*actor.Actor, []*actor.Actor, []ebiten.Key) {
+func (playmode *ModeFrostmourneHungers) InitActors(npcActors []*actor.Actor) {
 	// Initialize actors for the Frostmourne Hungers mode
 	// Include people, undead and abominations, animals
 	// More NPCs, more undead and higher level abbominations
@@ -57,3 +57,6 @@ func (playmode *ModeFrostmourneHungers) CheckGameOverAndUpdateState(gameState *G
 	// Check if the game is over and update the game state accordingly
 	// This could involve checking if all NPCs are purged or spared
 }
+
+// func InitPlayer() *actor.Actor
+// func InitNPCs() []*actor.Actor

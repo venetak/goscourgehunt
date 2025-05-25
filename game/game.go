@@ -4,11 +4,12 @@ import (
 	_ "image/png"
 	"strconv"
 
-	"github/actor"
+	"github.com/actor"
 
 	"github.com/gameplay"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
+	"github.com/player"
 	"github.com/rendering"
 )
 
@@ -37,7 +38,7 @@ var GameModeMap = map[int]string{
 const sampleText = "Press space key to start"
 
 type Game struct {
-	scourgeActor *actor.Actor
+	player       *player.Player
 	purgerActor  *actor.Actor
 	NPCActors    []*actor.Actor
 	State        *gameplay.GameState
@@ -47,12 +48,9 @@ type Game struct {
 	PromptPlayer bool
 }
 
-func NewGame(playerActor *actor.Actor, npcActors []*actor.Actor) *Game {
+func NewGame() *Game {
 	return &Game{
-		State:        &gameplay.GameState{Status: gameplay.StatusMap[gameplay.GameMenu]},
-		scourgeActor: playerActor,
-		purgerActor:  playerActor,
-		NPCActors:    npcActors,
+		State: &gameplay.GameState{Status: gameplay.StatusMap[gameplay.GameMenu]},
 	}
 }
 
@@ -105,6 +103,17 @@ func (g *Game) Update() error {
 	g.GameMode = 1
 	g.PlayMode = gameplay.NewPlayMode(g.GameMode)
 
+	// starts patrolling
+	// TODO: maybe not set actor separately but get it from player??
+	if g.player == nil {
+		g.player = g.PlayMode.InitPlayer()
+		g.purgerActor = g.player.Actor
+	}
+
+	if g.NPCActors == nil {
+		g.NPCActors = g.PlayMode.InitNPCs()
+	}
+
 	switch g.State.Status {
 	case StatusMap[GameMenu]:
 		if ebiten.IsKeyPressed(ebiten.KeySpace) {
@@ -121,7 +130,8 @@ func (g *Game) Update() error {
 			return nil
 		}
 		// starts patrolling
-		g.PlayMode.InitActors(g.purgerActor, g.NPCActors, g.keys)
+		// set initial actors state
+		g.PlayMode.InitActors(g.NPCActors)
 		if len(g.keys) > 0 {
 			g.PlayMode.HandleKeyboardInput(g.State, g.purgerActor, g.NPCActors, g.keys)
 			g.purgerActor.SetLimitBounds(ScreenWidthFloat, ScreenHeightFloat)

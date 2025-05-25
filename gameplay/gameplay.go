@@ -3,9 +3,10 @@ package gameplay
 import (
 	_ "image/png"
 
-	"github/actor"
+	"github.com/actor"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/player"
 )
 
 type GameStatus string
@@ -21,7 +22,7 @@ type GameState struct {
 
 type PlayMode interface {
 	EncounterNPCs(gameState *GameState, npc *actor.Actor)
-	InitActors(*actor.Actor, []*actor.Actor, []ebiten.Key)
+	InitActors(npcActors []*actor.Actor)
 	PauseGame(gameState *GameState, screen *ebiten.Image, ScreenWidth, ScreenHeight float64)
 	PropmptPlayer(gameState *GameState, player *actor.Actor, screen *ebiten.Image)
 	Purge(gameState *GameState, gameActors []*actor.Actor, npcActor *actor.Actor)
@@ -30,6 +31,8 @@ type PlayMode interface {
 	HandlePlayerInput(gameState *GameState, npcActors []*actor.Actor, npcActor *actor.Actor)
 	EndGame(gameState *GameState, screen *ebiten.Image)
 	CheckGameOverAndUpdateState(gameState *GameState, gameActors []*actor.Actor)
+	InitPlayer() *player.Player
+	InitNPCs() []*actor.Actor
 }
 
 // Game mode factory
@@ -38,8 +41,6 @@ func NewPlayMode(gameMode int) PlayMode {
 	switch gameMode {
 	case 1:
 		return &ModeInvincible{}
-	case 2:
-		return &ModeFrostmourneHungers{}
 	default:
 		return nil
 	}

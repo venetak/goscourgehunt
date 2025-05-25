@@ -3,7 +3,10 @@ package gameplay
 import (
 	_ "image/png"
 
-	"github/actor"
+	"github.com/actor"
+	"github.com/player"
+
+	"github.com/utils" // Replace with the correct path to the utils package
 
 	"github.com/rendering" // Replace with the correct path to the rendering package
 
@@ -100,9 +103,29 @@ func (playmode *ModeInvincible) Spare(gameState *GameState, gameActors []*actor.
 	playmode.removeNPC(gameState, gameActors, npcActor)
 }
 
+func (playmode *ModeInvincible) InitPlayer() *player.Player {
+	// Initialize the player actor
+	playerTexture := rendering.CreateTexture(utils.LoadFile("./assets/arthas.png"))
+	playerActor := actor.NewActor([2]float64{0, 0}, playerTexture, 14, "Purger")
+	return player.NewPlayer(playerActor)
+}
+
+func (playmode *ModeInvincible) InitNPCs() []*actor.Actor {
+	// Initialize the NPC actors
+	scourgeTexture := rendering.CreateTexture(utils.LoadFile("./assets/pudge.png"))
+	scourgeTexture1 := rendering.CreateTexture(utils.LoadFile("./assets/scourge.png"))
+
+	npcActor := actor.NewActor([2]float64{200, 200}, scourgeTexture, 4, "Scourge")
+	npcActor1 := actor.NewActor([2]float64{400, 200}, scourgeTexture1, 1, "Undead1")
+	npcActor2 := actor.NewActor([2]float64{500, 300}, scourgeTexture1, 1, "Undead2")
+	npcActor3 := actor.NewActor([2]float64{250, 50}, scourgeTexture1, 1, "Undead3")
+
+	return []*actor.Actor{npcActor, npcActor1, npcActor2, npcActor3}
+}
+
 // InitActors initializes the actors in the game.
 // It sets the patrol speed for each NPC actor and starts their patrol behavior.
-func (playmode *ModeInvincible) InitActors(player *actor.Actor, npcActors []*actor.Actor, pressedKeys []ebiten.Key) {
+func (playmode *ModeInvincible) InitActors(npcActors []*actor.Actor) {
 	for npcActor := range npcActors {
 		if !npcActors[npcActor].Draw {
 			continue
