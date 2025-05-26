@@ -92,3 +92,11 @@ func DrawText(screen *ebiten.Image, textToDraw string, x, y float64) {
 		Size:   FontSize,
 	}, op)
 }
+
+func DrawCircle(screen *ebiten.Image, x, y, radius float32) {
+	// Draw a filled circle
+	vector.DrawFilledCircle(screen, x, y, radius, color.RGBA{0x00, 0xFF, 0x00, 0xFF}, false)
+
+	// Draw a stroked circle (border)
+	vector.StrokeCircle(screen, x, y, radius, 2.0, color.RGBA{0xFF, 0x00, 0x00, 0xFF}, false)
+}

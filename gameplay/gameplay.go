@@ -18,6 +18,7 @@ type GameState struct {
 	PurgedCount      int
 	SparedCount      int
 	Target           *actor.Actor
+	TimeElapsed      float64
 }
 
 type PlayMode interface {
@@ -27,7 +28,7 @@ type PlayMode interface {
 	PropmptPlayer(gameState *GameState, player *actor.Actor, screen *ebiten.Image)
 	Purge(gameState *GameState, gameActors []*actor.Actor, npcActor *actor.Actor)
 	Spare(gameState *GameState, gameActors []*actor.Actor, npcActor *actor.Actor)
-	HandleKeyboardInput(gameState *GameState, player *actor.Actor, gameActors []*actor.Actor, keys []ebiten.Key)
+	HandleKeyboardInput(gameState *GameState, player *player.Player, gameActors []*actor.Actor, keys []ebiten.Key)
 	HandlePlayerInput(gameState *GameState, npcActors []*actor.Actor, npcActor *actor.Actor)
 	EndGame(gameState *GameState, screen *ebiten.Image)
 	CheckGameOverAndUpdateState(gameState *GameState, gameActors []*actor.Actor)

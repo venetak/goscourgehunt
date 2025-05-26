@@ -60,13 +60,16 @@ func (g *Game) DrawActor(screen *ebiten.Image, actor *actor.Actor) {
 	rendering.DrawImageWithMatrix(screen, actor.Image, op)
 }
 
-func (g *Game) SpawnActors(screen *ebiten.Image) {
-	for _, npc := range g.NPCActors {
-		// if !npc.Draw {
-		// 	continue
-		// }
-		g.DrawActor(screen, npc)
+func (g *Game) SpawnActors(screen *ebiten.Image, actors []*actor.Actor) {
+	for _, actor := range actors {
+		if !actor.Draw {
+			continue
+		}
+		g.DrawActor(screen, actor)
 	}
+}
+
+func (g *Game) DrawPlayer(screen *ebiten.Image) {
 	g.DrawActor(screen, g.purgerActor)
 }
 
@@ -87,24 +90,36 @@ func (g *Game) InitKillFeed(screen *ebiten.Image) {
 }
 
 func (g *Game) removeHiddenActors() {
-	for key, npc := range g.NPCActors {
+	NPCActorsCopy := make([]*actor.Actor, 0, len(g.NPCActors)) // Pre-allocate for efficiency
+	for _, npc := range g.NPCActors {
 		if npc.Draw {
-			continue
+			NPCActorsCopy = append(NPCActorsCopy, npc)
 		}
-		g.NPCActors = append(g.NPCActors[:key], g.NPCActors[key+1:]...)
+	}
+	g.NPCActors = NPCActorsCopy
+}
+
+func (g *Game) SetupCommonGameComponents(screen *ebiten.Image) {
+	g.InitKillFeed(screen)
+	g.DrawPlayer(screen)
+	g.SpawnActors(screen, g.NPCActors)
+	g.SpawnPlayerAbilities(screen)
+}
+
+func (g *Game) SpawnPlayerAbilities(screen *ebiten.Image) {
+	for _, ability := range g.player.Abilities {
+		g.DrawActor(screen, ability.Actor)
 	}
 }
 
+// Game lifecycle methods
 func (g *Game) Update() error {
 	g.keys = inpututil.AppendPressedKeys(g.keys[:0])
-	g.removeHiddenActors()
 
 	// TODO: set default game mode and update based on user choice
 	g.GameMode = 1
 	g.PlayMode = gameplay.NewPlayMode(g.GameMode)
 
-	// starts patrolling
-	// TODO: maybe not set actor separately but get it from player??
 	if g.player == nil {
 		g.player = g.PlayMode.InitPlayer()
 		g.purgerActor = g.player.Actor
@@ -133,18 +148,15 @@ func (g *Game) Update() error {
 		// set initial actors state
 		g.PlayMode.InitActors(g.NPCActors)
 		if len(g.keys) > 0 {
-			g.PlayMode.HandleKeyboardInput(g.State, g.purgerActor, g.NPCActors, g.keys)
+			g.PlayMode.HandleKeyboardInput(g.State, g.player, g.NPCActors, g.keys)
 			g.purgerActor.SetLimitBounds(ScreenWidthFloat, ScreenHeightFloat)
 		}
+		g.removeHiddenActors()
+		g.player.UpdateAbilitiesDurations()
 	case StatusMap[AwaitingUser]:
 		g.PlayMode.HandlePlayerInput(g.State, g.NPCActors, g.State.Target)
 	}
 	return nil
-}
-
-func (g *Game) SetupCommonGameComponents(screen *ebiten.Image) {
-	g.InitKillFeed(screen)
-	g.SpawnActors(screen)
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
@@ -154,6 +166,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		g.InitHomeScreen(screen)
 	case StatusMap[GameStarted]:
 		g.SetupCommonGameComponents(screen)
+		g.PlayMode.CheckGameOverAndUpdateState(g.State, g.NPCActors)
 	case StatusMap[GamePaused]:
 		g.SetupCommonGameComponents(screen)
 		g.PlayMode.PauseGame(g.State, screen, ScreenWidthFloat, ScreenHeightFloat)
@@ -163,8 +176,6 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	case StatusMap[GameEnded]:
 		g.PlayMode.EndGame(g.State, screen)
 	}
-
-	g.PlayMode.CheckGameOverAndUpdateState(g.State, g.NPCActors)
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (w, h int) {

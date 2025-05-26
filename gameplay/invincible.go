@@ -106,7 +106,7 @@ func (playmode *ModeInvincible) Spare(gameState *GameState, gameActors []*actor.
 func (playmode *ModeInvincible) InitPlayer() *player.Player {
 	// Initialize the player actor
 	playerTexture := rendering.CreateTexture(utils.LoadFile("./assets/arthas.png"))
-	playerActor := actor.NewActor([2]float64{0, 0}, playerTexture, 14, "Purger")
+	playerActor := actor.NewActor([2]float64{0, 0}, playerTexture, 14, "Purger", true)
 	return player.NewPlayer(playerActor)
 }
 
@@ -115,10 +115,10 @@ func (playmode *ModeInvincible) InitNPCs() []*actor.Actor {
 	scourgeTexture := rendering.CreateTexture(utils.LoadFile("./assets/pudge.png"))
 	scourgeTexture1 := rendering.CreateTexture(utils.LoadFile("./assets/scourge.png"))
 
-	npcActor := actor.NewActor([2]float64{200, 200}, scourgeTexture, 4, "Scourge")
-	npcActor1 := actor.NewActor([2]float64{400, 200}, scourgeTexture1, 1, "Undead1")
-	npcActor2 := actor.NewActor([2]float64{500, 300}, scourgeTexture1, 1, "Undead2")
-	npcActor3 := actor.NewActor([2]float64{250, 50}, scourgeTexture1, 1, "Undead3")
+	npcActor := actor.NewActor([2]float64{200, 200}, scourgeTexture, 4, "Scourge", true)
+	npcActor1 := actor.NewActor([2]float64{400, 200}, scourgeTexture1, 1, "Undead1", true)
+	npcActor2 := actor.NewActor([2]float64{500, 300}, scourgeTexture1, 1, "Undead2", true)
+	npcActor3 := actor.NewActor([2]float64{250, 50}, scourgeTexture1, 1, "Undead3", true)
 
 	return []*actor.Actor{npcActor, npcActor1, npcActor2, npcActor3}
 }
@@ -134,16 +134,34 @@ func (playmode *ModeInvincible) InitActors(npcActors []*actor.Actor) {
 	}
 }
 
-func (playmode *ModeInvincible) HandleKeyboardInput(gameState *GameState, player *actor.Actor, gameActors []*actor.Actor, keys []ebiten.Key) {
+func (playmode *ModeInvincible) HandleKeyboardInput(
+	gameState *GameState,
+	player *player.Player,
+	gameActors []*actor.Actor,
+	keys []ebiten.Key) {
 	player.HandleInput(keys)
 	// What if the NPC goes over the player?
 	for _, npcActor := range gameActors {
-		if !npcActor.Draw {
+		if !npcActor.Draw || !npcActor.CollisionEnabled {
 			continue
 		}
-		if player.CollidesWith(npcActor) {
-			playmode.EncounterNPCs(gameState, npcActor)
+		// if player.Actor.CollidesWith(npcActor) {
+		// 	playmode.EncounterNPCs(gameState, npcActor)
+		// }
+	}
+
+	for _, npcActor := range gameActors {
+		if !npcActor.Draw || !npcActor.CollisionEnabled {
+			continue
 		}
+		if len((player.Abilities)) > 0 && npcActor.CollidesWithAbility(player.Abilities[0].Actor) {
+			playmode.Purge(gameState, gameActors, npcActor)
+		}
+	}
+
+	// TODO: move this to Frostmourne Hungers mode
+	if inpututil.IsKeyJustPressed(ebiten.KeyD) {
+		player.DeathAndDecay()
 	}
 }
 

@@ -12,17 +12,18 @@ import (
 )
 
 type Actor struct {
-	Id              string
-	Name            string
-	Position        [2]float64
-	initialPosition [2]float64
-	targetPosition  [2]float64
-	Image           *ebiten.Image
-	Speed           float64
-	MoveDirectionX  float64
-	MoveDirectionY  float64
-	moveRange       float64
-	Draw            bool
+	Id               string
+	Name             string
+	Position         [2]float64
+	initialPosition  [2]float64
+	targetPosition   [2]float64
+	Image            *ebiten.Image
+	Speed            float64
+	MoveDirectionX   float64
+	MoveDirectionY   float64
+	moveRange        float64
+	Draw             bool
+	CollisionEnabled bool // Indicates if the actor can collide with other actors
 }
 
 type BoundingRect struct {
@@ -32,51 +33,24 @@ type BoundingRect struct {
 	Height    float64
 }
 
-func NewActor(position [2]float64, image *ebiten.Image, speed float64, name string) *Actor {
-
+func NewActor(position [2]float64, image *ebiten.Image, speed float64, name string, collision bool) *Actor {
 	return &Actor{
-		Id:              uuid.New().String(),
-		Name:            name,
-		Position:        position,
-		initialPosition: position,
-		targetPosition:  position,
-		Image:           image,
-		Speed:           speed, // Default speed
-		MoveDirectionX:  0.0,   // Default direction
-		MoveDirectionY:  0.0,
-		moveRange:       100.0, // Default move range
-		Draw:            true,
+		Id:               uuid.New().String(),
+		Name:             name,
+		Position:         position,
+		initialPosition:  position,
+		targetPosition:   position,
+		Image:            image,
+		Speed:            speed, // Default speed
+		MoveDirectionX:   0.0,   // Default direction
+		MoveDirectionY:   0.0,
+		moveRange:        100.0, // Default move range
+		Draw:             true,
+		CollisionEnabled: collision, // Default collision behavior
 	}
 }
 
-// HandleInput processes the input from the user and updates the actor's movement direction accordingly.
-// It takes a slice of ebiten.Key values representing the keys currently being pressed.
-// The function resets the actor's movement direction, checks which keys are pressed, and updates
-// the movement direction (MoveDirectionX and MoveDirectionY) based on the arrow keys.
-// Finally, it calculates the new position and moves the actor in the specified direction.
-func (actor *Actor) HandleInput(inputDeviceActionButtonNames []ebiten.Key) {
-	actor.resetMoveDirection()
-
-	for _, key := range inputDeviceActionButtonNames {
-		if ebiten.IsKeyPressed(key) {
-			switch key {
-			case ebiten.KeyArrowLeft:
-				actor.MoveDirectionX = -1
-			case ebiten.KeyArrowRight:
-				actor.MoveDirectionX = 1
-			case ebiten.KeyArrowUp:
-				actor.MoveDirectionY = -1
-			case ebiten.KeyArrowDown:
-				actor.MoveDirectionY = 1
-			}
-		}
-	}
-
-	newPosition := [2]float64{actor.MoveDirectionX, actor.MoveDirectionY}
-	actor.MoveIn(newPosition)
-}
-
-func (actor *Actor) resetMoveDirection() {
+func (actor *Actor) ResetMoveDirection() {
 	actor.MoveDirectionX = 0
 	actor.MoveDirectionY = 0
 }
@@ -107,10 +81,10 @@ func (actor *Actor) MoveIn(direction [2]float64) {
 	}
 }
 
-// calcBoundingRect calculates the bounding rectangle of the actor.
+// GetBoundingRect calculates the bounding rectangle of the actor.
 // The bounding rectangle is used for collision detection.
 // It takes into account the actor's position and the dimensions of the image.
-func calcBoundingRect(actor *Actor) *BoundingRect {
+func (actor *Actor) GetBoundingRect() *BoundingRect {
 	playerRect := actor.Image.Bounds()
 
 	return &BoundingRect{
@@ -126,18 +100,47 @@ func calcBoundingRect(actor *Actor) *BoundingRect {
 // - npc (non-player character) The second actor
 // returns true if they are colliding, and false otherwise.
 func (actor *Actor) CollidesWith(npc *Actor) bool {
-	playerRect := calcBoundingRect(actor)
-	npcRect := calcBoundingRect(npc)
+	playerRect := actor.GetBoundingRect()
+	npcRect := npc.GetBoundingRect()
 
-	if playerRect.PositionX < npcRect.PositionX+npcRect.Width &&
-		playerRect.PositionX+playerRect.Width > npcRect.PositionX &&
-		playerRect.PositionY < npcRect.PositionY+npcRect.Height &&
-		playerRect.PositionY+playerRect.Height > npcRect.PositionY {
+	return rectCollition(playerRect, npcRect)
+}
+
+// TODO: maybe move to phisics package?
+func rectCollition(rect1, rect2 *BoundingRect) bool {
+	if rect1.PositionX < rect2.PositionX+rect2.Width &&
+		rect1.PositionX+rect1.Width > rect2.PositionX &&
+		rect1.PositionY < rect2.PositionY+rect2.Height &&
+		rect1.PositionY+rect1.Height > rect2.PositionY {
 		log.Print("Collision!!!!!--------")
 		return true
 	}
 
 	return false
+}
+
+func (actor *Actor) CollidesWithAbility(ability *Actor) bool {
+	abilityBounds := ability.GetBoundingRect()
+	abilityRadius := abilityBounds.Width / 2 // Assuming the ability is circular, use half of its width as radius
+	abilityCenterX := ability.Position[0] + abilityRadius
+	abilityCenterY := ability.Position[1] + abilityRadius
+	return rectWithCircleCollision(actor.GetBoundingRect(), abilityCenterX, abilityCenterY, abilityRadius)
+}
+
+// detects if a rectangle collides with a circle.
+// It calculates the closest point on the rectangle to the circle's center
+// and checks if the distance from that point to the circle's center is less than or equal to the circle's radius.
+func rectWithCircleCollision(rect *BoundingRect, circleX, circleY, circleRadius float64) bool {
+	// Find the closest point on the rectangle to the circle
+	closestX := math.Max(rect.PositionX, math.Min(circleX, rect.PositionX+rect.Width))
+	closestY := math.Max(rect.PositionY, math.Min(circleY, rect.PositionY+rect.Height))
+
+	// Calculate the distance from the closest point to the circle's center
+	dx := closestX - circleX
+	dy := closestY - circleY
+
+	// If the distance is less than or equal to the circle's radius, there is a collision
+	return (dx*dx + dy*dy) <= (circleRadius * circleRadius)
 }
 
 // Moves the actor towards the target position.
@@ -189,7 +192,7 @@ func (actor *Actor) Patrol(moveRange float64) {
 // SetLimitBounds sets the limits for the actor's movement.
 // It ensures that the actor does not move outside the specified bounds (limiX, limitY).
 func (actor *Actor) SetLimitBounds(limiX, limitY float64) {
-	playerRect := calcBoundingRect(actor)
+	playerRect := actor.GetBoundingRect()
 	playerWidth := playerRect.Width
 	playerHeight := playerRect.Height
 

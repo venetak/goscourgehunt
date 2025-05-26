@@ -2,6 +2,7 @@ package gameplay
 
 import (
 	"github.com/actor"
+	"github.com/player"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -38,7 +39,7 @@ func (playmode *ModeFrostmourneHungers) Purge(gameState *GameState, gameActors [
 func (playmode *ModeFrostmourneHungers) Spare(gameState *GameState, gameActors []*actor.Actor, npcActor *actor.Actor) {
 	// Painless death :D
 }
-func (playmode *ModeFrostmourneHungers) HandleKeyboardInput(gameState *GameState, player *actor.Actor, gameActors []*actor.Actor, keys []ebiten.Key) {
+func (playmode *ModeFrostmourneHungers) HandleKeyboardInput(gameState *GameState, player *player.Player, gameActors *[]*actor.Actor, keys []ebiten.Key) {
 	// Will have handlers for mass purge
 	// and maybe some additionl abilities, like Death Coil
 }
