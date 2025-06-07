@@ -119,7 +119,7 @@ func (g *Game) Update() error {
 	g.keys = inpututil.AppendPressedKeys(g.keys[:0])
 
 	// TODO: set default game mode and update based on user choice
-	g.GameMode = 1
+	g.GameMode = 2
 	g.PlayMode = gameplay.NewPlayMode(g.GameMode)
 
 	if g.player == nil {

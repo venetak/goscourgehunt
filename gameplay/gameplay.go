@@ -51,6 +51,8 @@ func NewPlayMode(gameMode int) PlayMode {
 	switch gameMode {
 	case 1:
 		return &ModeInvincible{}
+	case 2:
+		return &ModeFrostmourneHungers{}
 	default:
 		return nil
 	}

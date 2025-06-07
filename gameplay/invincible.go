@@ -145,9 +145,9 @@ func (playmode *ModeInvincible) HandleKeyboardInput(
 		if !npcActor.Draw || !npcActor.CollisionEnabled {
 			continue
 		}
-		// if player.Actor.CollidesWith(npcActor) {
-		// 	playmode.EncounterNPCs(gameState, npcActor)
-		// }
+		if player.Actor.CollidesWith(npcActor) {
+			playmode.EncounterNPCs(gameState, npcActor)
+		}
 	}
 
 	for _, npcActor := range gameActors {
@@ -157,11 +157,6 @@ func (playmode *ModeInvincible) HandleKeyboardInput(
 		if len((player.Abilities)) > 0 && npcActor.CollidesWithAbility(player.Abilities[0].Actor) {
 			playmode.Purge(gameState, gameActors, npcActor)
 		}
-	}
-
-	// TODO: move this to Frostmourne Hungers mode
-	if inpututil.IsKeyJustPressed(ebiten.KeyD) {
-		player.DeathAndDecay()
 	}
 }
 
