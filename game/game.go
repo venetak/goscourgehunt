@@ -38,6 +38,7 @@ var GameModeMap = map[int]string{
 const sampleText = "Press space key to start"
 
 type Game struct {
+	Debug        bool
 	player       *player.Player
 	purgerActor  *actor.Actor
 	NPCActors    []*actor.Actor
@@ -48,8 +49,9 @@ type Game struct {
 	PromptPlayer bool
 }
 
-func NewGame() *Game {
+func NewGame(debug bool) *Game {
 	return &Game{
+		Debug: debug,
 		State: &gameplay.GameState{Status: gameplay.StatusMap[gameplay.GameMenu]},
 	}
 }
@@ -57,7 +59,7 @@ func NewGame() *Game {
 func (g *Game) DrawActor(screen *ebiten.Image, actor *actor.Actor) {
 	op := &ebiten.DrawImageOptions{}
 	op.GeoM.Translate(actor.Position[0], actor.Position[1])
-	rendering.DrawImageWithMatrix(screen, actor.Image, op)
+	rendering.DrawImageWithMatrix(screen, actor.Image, op, g.Debug)
 }
 
 func (g *Game) SpawnActors(screen *ebiten.Image, actors []*actor.Actor) {

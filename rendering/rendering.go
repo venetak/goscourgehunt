@@ -34,8 +34,23 @@ func init() {
 }
 
 // Rendering utils --- module?
-func DrawImageWithMatrix(screen *ebiten.Image, image *ebiten.Image, transformationM *ebiten.DrawImageOptions) {
+func DrawImageWithMatrix(screen *ebiten.Image, image *ebiten.Image, transformationM *ebiten.DrawImageOptions, debug bool) {
 	screen.DrawImage(image, transformationM)
+
+	if debug {
+		imgWidth, imgHeight := image.Size()
+		DrawBorder(image, 0, 0, float32(imgWidth), float32(imgHeight))
+	}
+
+}
+
+func DrawBorder(screen *ebiten.Image, x, y, width, height float32) {
+	borderColor := color.RGBA{255, 0, 0, 255}
+	borderWidth := float32(5) // Border thickness (like border-width)
+
+	// Draw border (stroked rectangle) around the box.
+	// Adjust position and size to account for border thickness if you want the border to be outside.
+	vector.StrokeRect(screen, x, y, width, height, borderWidth, borderColor, false)
 }
 
 func CreateTexture(imageFile *os.File) *ebiten.Image {
@@ -49,8 +64,8 @@ func CreateTexture(imageFile *os.File) *ebiten.Image {
 
 func DrawBox(screen *ebiten.Image, x, y, width, height float32) {
 	bgColor := color.RGBA{0xFF, 0x00, 0x00, 0xFF} // Red background (like background-color)
-	borderColor := color.RGBA{0x00, 0xFF, 0x00, 0xFF}
-	borderWidth := float32(2) // Border thickness (like border-width)
+	borderColor := color.RGBA{255, 0, 0, 255}
+	borderWidth := float32(5) // Border thickness (like border-width)
 
 	// Draw filled rectangle for background.
 	vector.DrawFilledRect(screen, x, y, width, height, bgColor, false)
