@@ -15,6 +15,15 @@ import (
 )
 
 type ModeFrostmourneHungers struct {
+	BasePlayMode
+}
+
+// These functions need to be clalled each game tick
+func (playmode *ModeFrostmourneHungers) Tick(gameState *GameState, gameActors []*actor.Actor, player *player.Player) {
+	playmode.InitActors(gameActors)
+	playmode.PurgeIfInAoE(gameState, gameActors, player)
+	playmode.HandlePlayerInput(gameState, gameActors, player.Actor)
+	playmode.CheckGameOverAndUpdateState(gameState, gameActors, player)
 }
 
 func (playmode *ModeFrostmourneHungers) EncounterNPCs(gameState *GameState, npc *actor.Actor) {
@@ -24,32 +33,27 @@ func (playmode *ModeFrostmourneHungers) EncounterNPCs(gameState *GameState, npc 
 	// If the player's AoE ability is active, the player can purge all NPCs in range
 }
 
-func (playmode *ModeFrostmourneHungers) InitActors(npcActors []*actor.Actor) {
-	for npcActor := range npcActors {
-		if !npcActors[npcActor].Draw {
+func (playmode *ModeFrostmourneHungers) Purge(gameState *GameState, gameActors []*actor.Actor, npcActor *actor.Actor) {
+	gameState.PurgedCount += 1
+	playmode.RemoveNPC(gameState, gameActors, npcActor)
+}
+
+func (playmode *ModeFrostmourneHungers) PurgeIfInAoE(gameState *GameState, gameActors []*actor.Actor, player *player.Player) {
+	for _, npcActor := range gameActors {
+		if !npcActor.Draw || !npcActor.CollisionEnabled || len((player.Abilities)) == 0 {
 			continue
 		}
-		npcActors[npcActor].Patrol(10)
+		if !npcActor.CollidesWithAbility(player.Abilities[0].Actor) {
+			continue
+		}
+		// If the NPC is in the player's AoE ability, purge it
+		playmode.Purge(gameState, gameActors, npcActor)
+		if gameState.PurgedCount%4 == 0 {
+			player.LevelUp()
+		}
 	}
-	// Setup other functions for the NPCs
 }
 
-func (playmode *ModeFrostmourneHungers) PropmptPlayer(gameState *GameState, player *actor.Actor, screen *ebiten.Image) {
-	// Draw the player prompt at the actor's position on the screen
-}
-
-func (playmode *ModeFrostmourneHungers) PauseGame(gameState *GameState, screen *ebiten.Image, ScreenWidth, ScreenHeight float64) {
-	// Same as the other, but the text might be different
-}
-
-func (playmode *ModeFrostmourneHungers) Purge(gameState *GameState, gameActors []*actor.Actor, npcActor *actor.Actor) {
-	// Implement mass purge as well.
-	// Some of the NPCs could come back and undead
-}
-
-func (playmode *ModeFrostmourneHungers) Spare(gameState *GameState, gameActors []*actor.Actor, npcActor *actor.Actor) {
-	// Painless death :D
-}
 func (playmode *ModeFrostmourneHungers) HandleKeyboardInput(
 	gameState *GameState,
 	player *player.Player,
@@ -57,20 +61,8 @@ func (playmode *ModeFrostmourneHungers) HandleKeyboardInput(
 	keys []ebiten.Key) {
 	player.HandleInput(keys)
 	// What if the NPC goes over the player?
-	for _, npcActor := range gameActors {
-		if !npcActor.Draw || !npcActor.CollisionEnabled {
-			continue
-		}
-	}
 
-	for _, npcActor := range gameActors {
-		if !npcActor.Draw || !npcActor.CollisionEnabled {
-			continue
-		}
-		if len((player.Abilities)) > 0 && npcActor.CollidesWithAbility(player.Abilities[0].Actor) {
-			playmode.Purge(gameState, gameActors, npcActor)
-		}
-	}
+	playmode.PurgeIfInAoE(gameState, gameActors, player)
 
 	if inpututil.IsKeyJustPressed(ebiten.KeyD) {
 		player.DeathAndDecay()
@@ -80,16 +72,12 @@ func (playmode *ModeFrostmourneHungers) HandlePlayerInput(gameState *GameState, 
 	// Might not be needed as this mode does not have "Waiting" as game state
 }
 
-func (playmode *ModeFrostmourneHungers) UpdateScore() {
-	// Update score based on purged NPCs
-	// g.purgedCount += 1
-}
-
-func (playmode *ModeFrostmourneHungers) EndGame(gameState *GameState, screen *ebiten.Image) {}
-
-func (playmode *ModeFrostmourneHungers) CheckGameOverAndUpdateState(gameState *GameState, gameActors []*actor.Actor) {
-	// Check if the game is over and update the game state accordingly
-	// This could involve checking if all NPCs are purged or spared
+func (playmode *ModeFrostmourneHungers) CheckGameOverAndUpdateState(gameState *GameState, gameActors []*actor.Actor, player *player.Player) {
+	if len(gameActors) == 0 {
+		gameState.Status = StatusMap[GameWon]
+	} else if player.Health <= 0 {
+		gameState.Status = StatusMap[GameLost]
+	}
 }
 
 func (playmode *ModeFrostmourneHungers) InitPlayer() *player.Player {

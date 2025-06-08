@@ -121,3 +121,10 @@ func (p *Player) UpdateAbilitiesDurations() {
 	}
 	p.Abilities = abilitiesCopy
 }
+
+// LevelUp increases the player's level and resets health and mana.
+func (p *Player) LevelUp() {
+	p.Level++
+	p.Health = 100 // Reset health to default value
+	p.Mana = 50    // Reset mana to default value
+}

@@ -168,7 +168,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		g.InitHomeScreen(screen)
 	case StatusMap[GameStarted]:
 		g.SetupCommonGameComponents(screen)
-		g.PlayMode.CheckGameOverAndUpdateState(g.State, g.NPCActors)
+		g.PlayMode.CheckGameOverAndUpdateState(g.State, g.NPCActors, g.player)
 	case StatusMap[GamePaused]:
 		g.SetupCommonGameComponents(screen)
 		g.PlayMode.PauseGame(g.State, screen, ScreenWidthFloat, ScreenHeightFloat)
